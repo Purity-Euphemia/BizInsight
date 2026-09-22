@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers - BizInsight</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">BizInsight</div>
+        <div class="nav-links">
+            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('main.products') }}">Products</a>
+            <a href="{{ url_for('main.inventory') }}">Inventory</a>
+            <a href="{{ url_for('main.sales') }}">Sales</a>
+            <a href="{{ url_for('main.customers') }}">Customers</a>
+            <span class="user-greeting">| Hello, {{ g.user['username'] }}</span>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 1000px;">
+        <header class="dashboard-header flex-between">
+            <div>
+                <h1>Customers</h1>
+                <p>Manage your client list and view their purchase history.</p>
+            </div>
+            <button class="btn btn-primary" onclick="openCustomerModal()">+ Add Customer</button>
+        </header>
+
+        <div class="card toolbar">
+            <input type="text" id="customerSearch" placeholder="Search customers by name, email, or phone..." onkeyup="filterCustomers()">
+        </div>
+
+        <div class="card mt-4">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody">
+                    <!-- Customers will be loaded here via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Customer</h2>
+                <span class="close" onclick="closeCustomerModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="customerForm" onsubmit="saveCustomer(event)">
+                    <input type="hidden" id="customerId">
+                    <div id="formError" class="alert alert-error" style="display: none;"></div>
+                    
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="text" id="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Mailing Address</label>
+                        <textarea id="address" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Customer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer History Modal -->
+    <div id="customerHistoryModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Purchase History</h2>
+                <span class="close" onclick="document.getElementById('customerHistoryModal').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h3 id="historyCustomerName" style="margin-top: 0; color: var(--primary-color);"></h3>
+                <div class="card" style="padding:0;">
+                    <table class="data-table" style="margin:0;">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Method</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchCustomers);
+    </script>
+</body>
+</html>

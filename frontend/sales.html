@@ -158,6 +158,12 @@
                     
                     <div class="cart-summary">
                         <div class="form-group">
+                            <label for="customerSelect" style="font-size: 0.9rem;">Customer (Optional)</label>
+                            <select id="customerSelect" style="width:100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                                <option value="">-- Walk-in Customer --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="paymentMethod" style="font-size: 0.9rem;">Payment Method</label>
                             <select id="paymentMethod" style="width:100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
                                 <option value="Cash">Cash</option>
@@ -211,7 +217,10 @@
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', fetchPOSProducts);
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchPOSProducts();
+            loadCustomersForSelect();
+        });
     </script>
 </body>
 </html>

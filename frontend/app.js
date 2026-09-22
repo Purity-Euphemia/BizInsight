@@ -377,8 +377,11 @@ async function checkout() {
     checkoutBtn.disabled = true;
     checkoutBtn.textContent = 'Processing...';
     
+    const customerSelect = document.getElementById('customerSelect');
+    
     const payload = {
         payment_method: document.getElementById('paymentMethod').value,
+        customer_id: customerSelect && customerSelect.value ? parseInt(customerSelect.value, 10) : null,
         items: cart.map(i => ({ product_id: i.product_id, quantity: i.quantity }))
     };
     
@@ -483,5 +486,185 @@ async function viewReceipt(saleId) {
     } catch (error) {
         console.error('Error viewing receipt:', error);
         alert('Failed to load receipt.');
+    }
+}
+
+// CUSTOMERS FUNCTIONS
+let customers = [];
+
+async function fetchCustomers() {
+    try {
+        const response = await fetch('/customers/api');
+        customers = await response.json();
+        renderCustomers();
+    } catch (error) {
+        console.error('Error fetching customers:', error);
+    }
+}
+
+function renderCustomers() {
+    const tbody = document.getElementById('customerTableBody');
+    if (!tbody) return;
+    
+    const search = document.getElementById('customerSearch')?.value.toLowerCase() || '';
+    tbody.innerHTML = '';
+    
+    const filtered = customers.filter(c => 
+        c.name.toLowerCase().includes(search) || 
+        (c.email && c.email.toLowerCase().includes(search)) ||
+        (c.phone && c.phone.toLowerCase().includes(search))
+    );
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No customers found.</td></tr>';
+        return;
+    }
+    
+    filtered.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="font-weight:bold;">${escapeHtml(c.name)}</td>
+            <td>${escapeHtml(c.email || '-')}</td>
+            <td>${escapeHtml(c.phone || '-')}</td>
+            <td>${escapeHtml(c.address || '-')}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="viewCustomerHistory(${c.id})">History</button>
+                <button class="btn btn-sm btn-secondary" onclick='editCustomer(${JSON.stringify(c).replace(/'/g, "&#39;")})'>Edit</button>
+                <button class="btn btn-sm btn-error" onclick="deleteCustomer(${c.id})">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function filterCustomers() {
+    renderCustomers();
+}
+
+async function loadCustomersForSelect() {
+    const select = document.getElementById('customerSelect');
+    if (!select) return;
+    
+    try {
+        const response = await fetch('/customers/api');
+        const data = await response.json();
+        
+        // Keep the first default option
+        select.innerHTML = '<option value="">-- Walk-in Customer --</option>';
+        data.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name + (c.phone ? ` (${c.phone})` : '');
+            select.appendChild(opt);
+        });
+    } catch (error) {
+        console.error('Error loading customers for select:', error);
+    }
+}
+
+function openCustomerModal() {
+    document.getElementById('customerForm').reset();
+    document.getElementById('customerId').value = '';
+    document.getElementById('modalTitle').textContent = 'Add Customer';
+    document.getElementById('formError').style.display = 'none';
+    document.getElementById('customerModal').style.display = 'block';
+}
+
+function closeCustomerModal() {
+    document.getElementById('customerModal').style.display = 'none';
+}
+
+function editCustomer(customer) {
+    document.getElementById('customerId').value = customer.id;
+    document.getElementById('name').value = customer.name;
+    document.getElementById('email').value = customer.email || '';
+    document.getElementById('phone').value = customer.phone || '';
+    document.getElementById('address').value = customer.address || '';
+    
+    document.getElementById('modalTitle').textContent = 'Edit Customer';
+    document.getElementById('formError').style.display = 'none';
+    document.getElementById('customerModal').style.display = 'block';
+}
+
+async function saveCustomer(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('customerId').value;
+    const url = id ? `/customers/api/${id}` : '/customers/api';
+    const method = id ? 'PUT' : 'POST';
+    
+    const payload = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            closeCustomerModal();
+            fetchCustomers();
+        } else {
+            const errorDiv = document.getElementById('formError');
+            errorDiv.textContent = result.error || 'Failed to save customer';
+            errorDiv.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error saving customer:', error);
+    }
+}
+
+async function deleteCustomer(id) {
+    if (!confirm('Are you sure you want to delete this customer? This will not delete their past sales, but will unlink their name.')) return;
+    
+    try {
+        const response = await fetch(`/customers/api/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            fetchCustomers();
+        } else {
+            alert('Failed to delete customer');
+        }
+    } catch (error) {
+        console.error('Error deleting customer:', error);
+    }
+}
+
+async function viewCustomerHistory(id) {
+    try {
+        const response = await fetch(`/customers/api/${id}/history`);
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error);
+        
+        document.getElementById('historyCustomerName').textContent = `Purchase History for ${data.customer_name}`;
+        const tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = '';
+        
+        if (data.sales.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center">No purchases found.</td></tr>';
+        } else {
+            data.sales.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${new Date(s.created_at).toLocaleDateString()}</td>
+                    <td style="font-weight:bold;">$${s.total_amount.toFixed(2)}</td>
+                    <td>${escapeHtml(s.payment_method)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        document.getElementById('customerHistoryModal').style.display = 'block';
+    } catch (error) {
+        console.error('Error viewing customer history:', error);
+        alert('Failed to load history.');
     }
 }
