@@ -1,39 +1,144 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BizInsight</title>
-    <!-- 
-      Notice how we link to the static files. 
-      Flask handles the '/static/' prefix because we configured it in app.py 
-    -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-brand">BizInsight</div>
-        <div class="nav-links">
-            <a href="{{ url_for('auth.login') }}">Log In</a>
-            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
-        </div>
-    </nav>
+{% extends "layout_auth.html" %}
+{% block title %}BizInsight - Business Intelligence for SMEs{% endblock %}
 
-    <div class="container">
-        <header>
-            <h1>Welcome to BizInsight</h1>
-            <p>Your business intelligence and management platform.</p>
-        </header>
-        
-        <main>
-            <div class="card">
-                <h2>Phase 1 & 2 Status</h2>
-                <p class="status-success">Flask setup and Authentication are ready!</p>
-                <p>Register an account to see your new dashboard.</p>
-            </div>
-        </main>
+{% block head %}
+<style>
+    /* Landing Page Specific Styles */
+    .hero-section {
+        text-align: center;
+        max-width: 800px;
+        margin: 4rem auto;
+    }
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: var(--primary-deep);
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+    }
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-muted);
+        margin-bottom: 2.5rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .hero-ctas {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 4rem;
+    }
+    .hero-ctas .btn { font-size: 1.1rem; padding: 0.8rem 2rem; }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto 5rem auto;
+    }
+    .feature-card {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        text-align: left;
+        border: 1px solid var(--border-light);
+    }
+    .feature-icon {
+        width: 48px; height: 48px;
+        border-radius: var(--radius-md);
+        background: #eff6ff;
+        color: var(--primary-blue);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; margin-bottom: 1rem;
+    }
+    
+    .how-it-works {
+        background: white;
+        padding: 5rem 2rem;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 5rem;
+    }
+    .steps-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: center;
+        margin-top: 3rem;
+    }
+    .step-box {
+        flex: 1; min-width: 250px;
+        text-align: center;
+    }
+    .step-num {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        background: var(--primary-deep);
+        color: white; font-weight: bold;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1rem auto;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block nav_links %}
+    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary" style="margin-right: 1rem;">Log In</a>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started</a>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <h1 class="hero-title">Understand Your Business.<br>Make Smarter Decisions.</h1>
+    <p class="hero-subtitle">BizInsight helps small businesses manage sales, inventory, expenses, and customers while turning everyday business data into clear, actionable insights.</p>
+    <div class="hero-ctas">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started for Free</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Log In</a>
     </div>
+</div>
 
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
-</body>
-</html>
+<div class="features-grid">
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+        <h3>Sales Tracking</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Record transactions instantly and monitor your daily revenue.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-box"></i></div>
+        <h3>Inventory Management</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Never run out of stock. Get automated low-stock alerts.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+        <h3>Business Analytics</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Visualize your profit, expenses, and top-selling products.</p>
+    </div>
+</div>
+
+<div class="how-it-works" style="max-width: 1000px; width: 100%; text-align: center;">
+    <h2>How It Works</h2>
+    <p style="color: var(--text-muted); margin-top: 0.5rem;">Getting started is simple.</p>
+    
+    <div class="steps-container">
+        <div class="step-box">
+            <div class="step-num">1</div>
+            <h4>Add Your Business Data</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">Log your products, sales, and everyday expenses.</p>
+        </div>
+        <div class="step-box">
+            <div class="step-num">2</div>
+            <h4>BizInsight Analyzes It</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">Our engine processes your data and generates real-time reports.</p>
+        </div>
+        <div class="step-box">
+            <div class="step-num">3</div>
+            <h4>Understand Performance</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">View beautiful dashboards and make data-driven decisions.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

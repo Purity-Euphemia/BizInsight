@@ -1,78 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics - BizInsight</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .chart-container {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-        }
-        .chart-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-brand">BizInsight</div>
-        <div class="nav-links">
-            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('main.products') }}">Products</a>
-            <a href="{{ url_for('main.inventory') }}">Inventory</a>
-            <a href="{{ url_for('main.sales') }}">Sales</a>
-            <a href="{{ url_for('main.customers') }}">Customers</a>
-            <a href="{{ url_for('main.expenses') }}">Expenses</a>
-            <a href="{{ url_for('main.analytics') }}">Analytics</a>
-            <a href="{{ url_for('main.reports') }}">Reports</a>
-            <span class="user-greeting">| Hello, {{ g.user['username'] }}</span>
-            <span class="nav-notification" onclick="openNotificationModal()">🔔 Alerts <span class="badge-count" id="navBadgeCount">0</span></span>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm" style="margin-left: 10px;">Log Out</a>
-        </div>
-    </nav>
+{% extends "layout_dashboard.html" %}
+{% block title %}Analytics - BizInsight{% endblock %}
 
-    <div class="container">
-        <header class="dashboard-header">
-            <h1>Business Analytics</h1>
-            <p>Interactive insights and trends.</p>
-        </header>
+{% block content %}
+<div class="flex-between align-center" style="margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title">Business Analytics</h1>
+        <p class="page-subtitle" style="margin-bottom: 0;">Interactive insights, trends, and breakdowns.</p>
+    </div>
+</div>
 
-        <div class="chart-grid">
-            <!-- Sales Trend Line Chart -->
-            <div class="chart-container">
-                <h3 style="margin-top:0;">30-Day Sales Trend</h3>
-                <canvas id="salesTrendChart"></canvas>
-            </div>
-
-            <!-- Expense Breakdown Doughnut -->
-            <div class="chart-container">
-                <h3 style="margin-top:0;">Expense Breakdown</h3>
-                <div style="position: relative; height: 300px; width: 100%;">
-                    <canvas id="expenseBreakdownChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profit Trend Bar Chart -->
-        <div class="chart-container">
-            <h3 style="margin-top:0;">Revenue vs Expenses (Monthly)</h3>
-            <canvas id="profitTrendChart" style="max-height: 400px;"></canvas>
-        </div>
-
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+    <!-- Sales Trend Line Chart -->
+    <div class="card" style="margin-bottom: 0;">
+        <h3 style="margin-bottom: 1.5rem;">30-Day Sales Trend</h3>
+        <canvas id="salesTrendChart"></canvas>
     </div>
 
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', fetchAnalytics);
-    </script>
-</body>
-</html>
+    <!-- Expense Breakdown Doughnut -->
+    <div class="card" style="margin-bottom: 0;">
+        <h3 style="margin-bottom: 1.5rem;">Expense Breakdown</h3>
+        <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="expenseBreakdownChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Profit Trend Bar Chart -->
+<div class="card">
+    <h3 style="margin-bottom: 1.5rem;">Revenue vs Expenses (Monthly)</h3>
+    <canvas id="profitTrendChart" style="max-height: 400px;"></canvas>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', fetchAnalytics);
+</script>
+{% endblock %}

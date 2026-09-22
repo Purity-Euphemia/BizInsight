@@ -1,143 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory - BizInsight</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .stat-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin: 0.5rem 0;
-        }
-        .stat-label {
-            color: #6b7280;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .text-error { color: #dc2626; }
-        .text-warning { color: #d97706; }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-brand">BizInsight</div>
-        <div class="nav-links">
-            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('main.products') }}">Products</a>
-            <a href="{{ url_for('main.inventory') }}">Inventory</a>
-            <a href="{{ url_for('main.sales') }}">Sales</a>
-            <a href="{{ url_for('main.customers') }}">Customers</a>
-            <a href="{{ url_for('main.expenses') }}">Expenses</a>
-            <a href="{{ url_for('main.analytics') }}">Analytics</a>
-            <a href="{{ url_for('main.reports') }}">Reports</a>
-            <span class="user-greeting">| Hello, {{ g.user['username'] }}</span>
-            <span class="nav-notification" onclick="openNotificationModal()">🔔 Alerts <span class="badge-count" id="navBadgeCount">0</span></span>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm" style="margin-left: 10px;">Log Out</a>
-        </div>
-    </nav>
+{% extends "layout_dashboard.html" %}
+{% block title %}Inventory - BizInsight{% endblock %}
 
-    <div class="container" style="max-width: 1000px;">
-        <header class="dashboard-header flex-between">
-            <div>
-                <h1>Inventory Management</h1>
-                <p>Track your stock levels and make manual adjustments.</p>
-            </div>
-        </header>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Products</div>
-                <div class="stat-value" id="statTotal">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Low Stock</div>
-                <div class="stat-value text-warning" id="statLow">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Out of Stock</div>
-                <div class="stat-value text-error" id="statOut">0</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Product Name</th>
-                        <th>Category</th>
-                        <th>Current Quantity</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="inventoryTableBody">
-                    <!-- Loaded via JS -->
-                </tbody>
-            </table>
-        </div>
+{% block content %}
+<div class="flex-between align-center" style="margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title">Inventory Dashboard</h1>
+        <p class="page-subtitle" style="margin-bottom: 0;">Track stock levels and stock-in new inventory.</p>
     </div>
+</div>
 
-    <!-- Adjust Stock Modal -->
-    <div id="adjustModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Adjust Stock</h2>
-                <span class="close" onclick="closeAdjustModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p id="adjustProductName" style="font-weight: bold; margin-bottom: 1rem;"></p>
-                <form id="adjustForm" onsubmit="submitAdjustment(event)">
-                    <input type="hidden" id="adjustProductId">
-                    <div id="adjustError" class="alert alert-error" style="display: none;"></div>
-                    
-                    <div class="form-group flex-row">
-                        <div style="flex: 1; margin-right: 1rem;">
-                            <label for="transaction_type">Type</label>
-                            <select id="transaction_type" style="width:100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px;">
-                                <option value="IN">Add Stock (IN)</option>
-                                <option value="OUT">Remove Stock (OUT)</option>
-                            </select>
-                        </div>
-                        <div style="flex: 1;">
-                            <label for="adjust_quantity">Quantity</label>
-                            <input type="number" min="1" id="adjust_quantity" required value="1">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="reference">Reference / Reason</label>
-                        <input type="text" id="reference" placeholder="e.g. Manual count, Damaged goods">
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="closeAdjustModal()">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Confirm Adjustment</button>
-                    </div>
-                </form>
-            </div>
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Total Value</span>
+            <div class="kpi-icon blue"><i class="fa-solid fa-boxes-stacked"></i></div>
         </div>
+        <div class="kpi-value" id="invTotalValue">Loading...</div>
     </div>
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Total Products</span>
+            <div class="kpi-icon purple"><i class="fa-solid fa-list"></i></div>
+        </div>
+        <div class="kpi-value" id="invTotalProducts">Loading...</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Low Stock Items</span>
+            <div class="kpi-icon amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        </div>
+        <div class="kpi-value" id="invLowStock">Loading...</div>
+    </div>
+</div>
 
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', fetchInventoryStatus);
-    </script>
-</body>
-</html>
+<div class="card">
+    <div class="flex-between" style="margin-bottom: 1.5rem;">
+        <h3>Current Stock Levels</h3>
+    </div>
+    <div class="table-container">
+        <table class="data-table" id="inventoryTable">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryTableBody">
+                <tr><td colspan="5" class="text-center text-muted">Loading inventory...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Stock In Modal -->
+<div id="stockInModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Add Stock</h2>
+            <span class="close" onclick="closeStockInModal()">&times;</span>
+        </div>
+        <form id="stockInForm">
+            <input type="hidden" id="stockInProductId">
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">
+                Adding stock for: <strong id="stockInProductName" style="color: var(--text-dark);"></strong>
+            </p>
+            <div class="form-group">
+                <label class="form-label" for="stockInQuantity">Quantity to Add *</label>
+                <input class="form-control" type="number" min="1" id="stockInQuantity" required>
+            </div>
+            <div id="stockInError" class="alert alert-danger" style="display: none;"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeStockInModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Stock</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

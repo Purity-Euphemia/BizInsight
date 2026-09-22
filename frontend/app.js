@@ -22,7 +22,7 @@ async function fetchProducts() {
         tbody.innerHTML = '';
         
         if (products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No products found.</td></tr>';
+            tbody.innerHTML = getEmptyStateHTML(6, "No products yet", "Add your first product to start managing inventory.");
             return;
         }
 
@@ -33,20 +33,17 @@ async function fetchProducts() {
             let statusHtml = `<span class="badge badge-success">In Stock</span>`;
             if (p.quantity === 0) {
                 statusHtml = `<span class="badge badge-error">Out of Stock</span>`;
-            } else if (p.quantity <= p.low_stock_limit) {
-                statusHtml = `<span class="badge badge-warning">Low Stock</span>`;
-            }
-
             tr.innerHTML = `
                 <td>${escapeHtml(p.name)}</td>
-                <td>${escapeHtml(p.category || '-')}</td>
-                <td>$${p.buying_price.toFixed(2)}</td>
-                <td>$${p.selling_price.toFixed(2)}</td>
-                <td>${p.quantity}</td>
-                <td>${statusHtml}</td>
+                <td><span class="badge badge-neutral">${escapeHtml(p.category || '-')}</span></td>
+                <td>₦${p.buying_price.toFixed(2)}</td>
+                <td>₦${p.selling_price.toFixed(2)}</td>
                 <td>
-                    <button class="btn btn-sm btn-secondary" onclick='editProduct(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Edit</button>
-                    <button class="btn btn-sm btn-error" onclick="deleteProduct(${p.id})">Delete</button>
+                    <span class="badge ${p.quantity <= p.low_stock_limit ? 'badge-danger' : 'badge-success'}">${p.quantity}</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-secondary" onclick="openEditProductModal(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})"><i class="fa-solid fa-trash"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -138,6 +135,20 @@ function editProduct(product) {
     document.getElementById('productModal').style.display = 'block';
 }
 
+async function openEditProductModal(id) {
+    try {
+        const response = await fetch(`/products/api/${id}`);
+        const product = await response.json();
+        if (response.ok) {
+            editProduct(product);
+        } else {
+            alert('Failed to load product details');
+        }
+    } catch (error) {
+        console.error('Error opening edit product modal:', error);
+    }
+}
+
 // Utility to prevent XSS in table rendering
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
@@ -173,27 +184,20 @@ async function fetchInventoryStatus() {
         tbody.innerHTML = '';
         
         if (data.items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No products in inventory.</td></tr>';
+            tbody.innerHTML = getEmptyStateHTML(5, "Inventory is empty", "Add products to track their stock levels.");
             return;
         }
 
         data.items.forEach(p => {
             const tr = document.createElement('tr');
             
-            let statusHtml = `<span class="badge badge-success">In Stock</span>`;
-            if (p.status === 'Out of Stock') {
-                statusHtml = `<span class="badge badge-error">Out of Stock</span>`;
-            } else if (p.status === 'Low Stock') {
-                statusHtml = `<span class="badge badge-warning">Low Stock</span>`;
-            }
-
             tr.innerHTML = `
                 <td>${escapeHtml(p.name)}</td>
-                <td>${escapeHtml(p.category || '-')}</td>
-                <td style="font-size: 1.2rem; font-weight: bold;">${p.quantity}</td>
-                <td>${statusHtml}</td>
+                <td><span class="badge badge-neutral">${escapeHtml(p.category || '-')}</span></td>
+                <td><strong>${p.quantity}</strong></td>
+                <td><span class="badge ${p.quantity <= p.low_stock_limit ? 'badge-danger' : 'badge-success'}">${p.quantity <= p.low_stock_limit ? 'Low Stock' : 'Healthy'}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="openAdjustModal(${p.id}, '${escapeHtml(p.name)}')">Adjust Stock</button>
+                    <button class="btn btn-sm btn-primary" onclick="openStockInModal(${p.id}, '${escapeHtml(p.name)}')"><i class="fa-solid fa-plus"></i> Add Stock</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -202,6 +206,10 @@ async function fetchInventoryStatus() {
     } catch (error) {
         console.error('Error fetching inventory:', error);
     }
+}
+
+function openStockInModal(productId, productName) {
+    openAdjustModal(productId, productName);
 }
 
 function openAdjustModal(productId, productName) {
@@ -243,6 +251,11 @@ async function submitAdjustment(event) {
             errorDiv.textContent = result.error || 'Failed to adjust stock';
             errorDiv.style.display = 'block';
         }
+    } catch (error) {
+        console.error('Error adjusting stock:', error);
+    }
+}
+
 // SALES AND POS FUNCTIONS
 let posProducts = [];
 let cart = [];
@@ -282,7 +295,7 @@ function renderPOSProducts() {
         
         card.innerHTML = `
             <div class="product-card-title">${escapeHtml(p.name)}</div>
-            <div class="product-card-price">$${p.selling_price.toFixed(2)}</div>
+            <div class="product-card-price">₦${p.selling_price.toFixed(2)}</div>
             <div class="product-card-stock">${isOutOfStock ? 'Out of Stock' : p.quantity + ' in stock'}</div>
         `;
         grid.appendChild(card);
@@ -314,11 +327,10 @@ function addToCart(product) {
     renderCart();
 }
 
-function changeCartQty(productId, delta) {
+function updateCartQuantity(productId, newQty) {
     const item = cart.find(i => i.product_id === productId);
     if (!item) return;
     
-    const newQty = item.quantity + delta;
     if (newQty <= 0) {
         cart = cart.filter(i => i.product_id !== productId);
     } else if (newQty > item.max_stock) {
@@ -329,10 +341,15 @@ function changeCartQty(productId, delta) {
     renderCart();
 }
 
+function removeFromCart(productId) {
+    cart = cart.filter(i => i.product_id !== productId);
+    renderCart();
+}
+
 function renderCart() {
-    const cartEl = document.getElementById('cartItems');
+    const cartEl = document.getElementById('cartBody');
     const totalEl = document.getElementById('cartTotal');
-    const checkoutBtn = document.getElementById('checkoutBtn');
+    const checkoutBtn = document.getElementById('processSaleBtn');
     
     if (!cartEl) return;
     
@@ -340,37 +357,41 @@ function renderCart() {
     let total = 0;
     
     if (cart.length === 0) {
-        cartEl.innerHTML = '<div class="text-center" style="color: #9ca3af; margin-top: 2rem;">Cart is empty</div>';
-        totalEl.textContent = '$0.00';
-        checkoutBtn.disabled = true;
+        cartEl.innerHTML = `<tr><td colspan="5" class="text-center text-muted" style="padding: 2rem;">Cart is empty</td></tr>`;
+        totalEl.textContent = '₦0.00';
+        if(checkoutBtn) checkoutBtn.disabled = true;
         return;
     }
+    
+    if(checkoutBtn) checkoutBtn.disabled = false;
     
     cart.forEach(item => {
         const subtotal = item.unit_price * item.quantity;
         total += subtotal;
         
-        const div = document.createElement('div');
-        div.className = 'cart-item';
-        div.innerHTML = `
-            <div class="cart-item-info">
-                <div class="cart-item-title">${escapeHtml(item.name)}</div>
-                <div class="cart-item-price">$${item.unit_price.toFixed(2)} x ${item.quantity} = $${subtotal.toFixed(2)}</div>
-            </div>
-            <div class="cart-controls">
-                <button class="cart-qty-btn" onclick="changeCartQty(${item.product_id}, -1)">-</button>
-                <span class="cart-qty">${item.quantity}</span>
-                <button class="cart-qty-btn" onclick="changeCartQty(${item.product_id}, 1)">+</button>
-            </div>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${escapeHtml(item.name)}</strong></td>
+            <td>₦${item.unit_price.toFixed(2)}</td>
+            <td>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="btn btn-secondary btn-sm" onclick="updateCartQuantity(${item.product_id}, ${item.quantity - 1})">-</button>
+                    <span style="font-weight: bold;">${item.quantity}</span>
+                    <button class="btn btn-secondary btn-sm" onclick="updateCartQuantity(${item.product_id}, ${item.quantity + 1})">+</button>
+                </div>
+            </td>
+            <td><strong>₦${subtotal.toFixed(2)}</strong></td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.product_id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
         `;
-        cartEl.appendChild(div);
+        cartEl.appendChild(tr);
     });
     
-    totalEl.textContent = `$${total.toFixed(2)}`;
-    checkoutBtn.disabled = false;
+    totalEl.textContent = '₦' + total.toFixed(2);
 }
 
-async function checkout() {
+async function processSale() {
     if (cart.length === 0) return;
     
     const checkoutBtn = document.getElementById('checkoutBtn');
@@ -422,7 +443,7 @@ async function fetchSalesHistory() {
         tbody.innerHTML = '';
         
         if (sales.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No sales recorded yet.</td></tr>';
+            tbody.innerHTML = getEmptyStateHTML(6, "No sales recorded yet", "Complete a sale to see it listed here.");
             return;
         }
 
@@ -430,11 +451,12 @@ async function fetchSalesHistory() {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>#${s.id}</td>
-                <td>${new Date(s.created_at).toLocaleString()}</td>
-                <td>${escapeHtml(s.payment_method)}</td>
-                <td style="font-weight:bold;">$${s.total_amount.toFixed(2)}</td>
+                <td>${s.created_at}</td>
+                <td>${escapeHtml(s.customer_name || 'Guest')}</td>
+                <td><strong>₦${s.total_amount.toFixed(2)}</strong></td>
+                <td><span class="badge badge-neutral">${s.payment_method}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-secondary" onclick="viewReceipt(${s.id})">View Receipt</button>
+                    <button class="btn btn-sm btn-secondary" onclick="viewSale(${s.id})">View Receipt</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -444,7 +466,7 @@ async function fetchSalesHistory() {
     }
 }
 
-async function viewReceipt(saleId) {
+async function viewSale(saleId) {
     try {
         const response = await fetch(`/sales/api/${saleId}`);
         const data = await response.json();
@@ -466,7 +488,7 @@ async function viewReceipt(saleId) {
             html += `
                 <tr>
                     <td style="padding: 0.25rem 0;">${escapeHtml(i.product_name)} x${i.quantity}</td>
-                    <td style="text-align:right;">$${i.subtotal.toFixed(2)}</td>
+                    <td style="text-align:right;">₦${i.subtotal.toFixed(2)}</td>
                 </tr>
             `;
         });
@@ -475,7 +497,7 @@ async function viewReceipt(saleId) {
             </table>
             <div style="border-top: 1px solid #ccc; padding-top: 0.5rem; display:flex; justify-content:space-between; font-weight:bold; font-size:1.1rem;">
                 <span>Total</span>
-                <span>$${data.sale.total_amount.toFixed(2)}</span>
+                <span>₦${data.sale.total_amount.toFixed(2)}</span>
             </div>
             <div style="color:#666; font-size:0.85rem; margin-top:0.5rem;">Paid via ${escapeHtml(data.sale.payment_method)}</div>
         `;
@@ -516,19 +538,19 @@ function renderCustomers() {
     );
     
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No customers found.</td></tr>';
+        tbody.innerHTML = getEmptyStateHTML(5, "No customers found", "Add your first customer to build your client list.");
         return;
     }
     
     filtered.forEach(c => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td style="font-weight:bold;">${escapeHtml(c.name)}</td>
+            <td><strong>${escapeHtml(c.name)}</strong></td>
             <td>${escapeHtml(c.email || '-')}</td>
             <td>${escapeHtml(c.phone || '-')}</td>
-            <td>${escapeHtml(c.address || '-')}</td>
+            <td>${c.created_at}</td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="viewCustomerHistory(${c.id})">History</button>
+                <button class="btn btn-sm btn-secondary" onclick="viewCustomer(${c.id})"><i class="fa-solid fa-eye"></i></button>
                 <button class="btn btn-sm btn-secondary" onclick='editCustomer(${JSON.stringify(c).replace(/'/g, "&#39;")})'>Edit</button>
                 <button class="btn btn-sm btn-error" onclick="deleteCustomer(${c.id})">Delete</button>
             </td>
@@ -637,7 +659,7 @@ async function deleteCustomer(id) {
     }
 }
 
-async function viewCustomerHistory(id) {
+async function viewCustomer(id) {
     try {
         const response = await fetch(`/customers/api/${id}/history`);
         const data = await response.json();
@@ -649,14 +671,15 @@ async function viewCustomerHistory(id) {
         tbody.innerHTML = '';
         
         if (data.sales.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center">No purchases found.</td></tr>';
+            tbody.innerHTML = getEmptyStateHTML(4, "No purchases found", "This customer has not made any purchases yet.");
         } else {
             data.sales.forEach(s => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${new Date(s.created_at).toLocaleDateString()}</td>
-                    <td style="font-weight:bold;">$${s.total_amount.toFixed(2)}</td>
-                    <td>${escapeHtml(s.payment_method)}</td>
+                    <td>${s.created_at.split(' ')[0]}</td>
+                    <td><strong>₦${s.total_amount.toFixed(2)}</strong></td>
+                    <td><span class="badge badge-neutral">${s.payment_method}</span></td>
+                    <td><span class="badge badge-success">Paid</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -695,7 +718,7 @@ function renderExpenses() {
     );
     
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No expenses found.</td></tr>';
+        tbody.innerHTML = getEmptyStateHTML(5, "No expenses found", "Record your business expenses to track cash flow.");
         return;
     }
     
@@ -806,12 +829,12 @@ async function fetchDashboardMetrics() {
         
         const m = data.metrics;
         
-        document.getElementById('metric-revenue').textContent = `$${m.revenue.toFixed(2)}`;
-        document.getElementById('metric-gross-profit').textContent = `$${m.gross_profit.toFixed(2)}`;
-        document.getElementById('metric-expenses').textContent = `-$${m.expenses.toFixed(2)}`;
+        document.getElementById('metric-revenue').textContent = `₦${m.revenue.toFixed(2)}`;
+        document.getElementById('metric-gross-profit').textContent = `₦${m.gross_profit.toFixed(2)}`;
+        document.getElementById('metric-expenses').textContent = `-₦${m.expenses.toFixed(2)}`;
         
         const npEl = document.getElementById('metric-net-profit');
-        npEl.textContent = `$${m.net_profit.toFixed(2)}`;
+        npEl.textContent = `₦${m.net_profit.toFixed(2)}`;
         if (m.net_profit < 0) {
             npEl.classList.add('text-error');
         } else {
@@ -825,14 +848,15 @@ async function fetchDashboardMetrics() {
         const salesBody = document.getElementById('recentSalesBody');
         salesBody.innerHTML = '';
         if (data.recent_sales.length === 0) {
-            salesBody.innerHTML = '<tr><td colspan="3" class="text-center">No recent sales.</td></tr>';
+            salesBody.innerHTML = getEmptyStateHTML(4, "No recent sales", "Sales history will appear here.");
         } else {
             data.recent_sales.forEach(s => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>#${s.id}</td>
-                    <td>${new Date(s.created_at).toLocaleDateString()}</td>
-                    <td style="font-weight:bold;">$${s.total_amount.toFixed(2)}</td>
+                    <td>${s.created_at.split(' ')[0]}</td>
+                    <td><strong>₦${s.total_amount.toFixed(2)}</strong></td>
+                    <td><span class="badge badge-neutral">${escapeHtml(s.payment_method)}</span></td>
+                    <td><span class="badge badge-success">Paid</span></td>
                 `;
                 salesBody.appendChild(tr);
             });
@@ -842,13 +866,13 @@ async function fetchDashboardMetrics() {
         const topBody = document.getElementById('topProductsBody');
         topBody.innerHTML = '';
         if (data.top_products.length === 0) {
-            topBody.innerHTML = '<tr><td colspan="2" class="text-center">No sales data.</td></tr>';
+            topBody.innerHTML = getEmptyStateHTML(2, "No sales data", "Sell products to see your top performers.");
         } else {
             data.top_products.forEach(p => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${escapeHtml(p.name)}</td>
-                    <td style="font-weight:bold;">${p.total_sold} units</td>
+                    <td><strong>${escapeHtml(p.name)}</strong></td>
+                    <td style="text-align: right;">${p.total_sold} units</td>
                 `;
                 topBody.appendChild(tr);
             });

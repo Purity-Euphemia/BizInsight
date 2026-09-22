@@ -1,85 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports - BizInsight</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        .report-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-        .report-card {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .report-card h3 {
-            margin-top: 0;
-            color: var(--primary-color);
-        }
-        .report-card p {
-            color: #6b7280;
-            margin-bottom: 2rem;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-brand">BizInsight</div>
-        <div class="nav-links">
-            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('main.products') }}">Products</a>
-            <a href="{{ url_for('main.inventory') }}">Inventory</a>
-            <a href="{{ url_for('main.sales') }}">Sales</a>
-            <a href="{{ url_for('main.customers') }}">Customers</a>
-            <a href="{{ url_for('main.expenses') }}">Expenses</a>
-            <a href="{{ url_for('main.analytics') }}">Analytics</a>
-            <a href="{{ url_for('main.reports') }}">Reports</a>
-            <span class="user-greeting">| Hello, {{ g.user['username'] }}</span>
-            <span class="nav-notification" onclick="openNotificationModal()">🔔 Alerts <span class="badge-count" id="navBadgeCount">0</span></span>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm" style="margin-left: 10px;">Log Out</a>
-        </div>
-    </nav>
+{% extends "layout_dashboard.html" %}
+{% block title %}Reports - BizInsight{% endblock %}
 
-    <div class="container" style="max-width: 1000px;">
-        <header class="dashboard-header">
-            <h1>Data & Reports</h1>
-            <p>Export your business data securely as CSV files.</p>
-        </header>
-
-        <div class="report-grid">
-            <div class="report-card">
-                <div>
-                    <h3>Sales Report</h3>
-                    <p>A complete history of all your sales, including the date, amount, payment method, and customer.</p>
-                </div>
-                <a href="/reports/api/download/sales" class="btn btn-primary text-center">Download CSV</a>
-            </div>
-
-            <div class="report-card">
-                <div>
-                    <h3>Expenses Report</h3>
-                    <p>A comprehensive list of all logged business expenses categorized for easy accounting.</p>
-                </div>
-                <a href="/reports/api/download/expenses" class="btn btn-primary text-center">Download CSV</a>
-            </div>
-
-            <div class="report-card">
-                <div>
-                    <h3>Inventory Report</h3>
-                    <p>A snapshot of your current stock levels, buying/selling prices, and total stock valuation.</p>
-                </div>
-                <a href="/reports/api/download/inventory" class="btn btn-primary text-center">Download CSV</a>
-            </div>
-        </div>
+{% block content %}
+<div class="flex-between align-center" style="margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title">Data & Reports</h1>
+        <p class="page-subtitle" style="margin-bottom: 0;">Export your business data securely as CSV files.</p>
     </div>
-</body>
-</html>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div style="margin-bottom: 1.5rem;">
+            <div class="kpi-icon blue" style="margin-bottom: 1rem;"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+            <h3 style="margin-bottom: 0.5rem;">Sales Report</h3>
+            <p class="text-muted" style="font-size: 0.9rem;">Complete history of all sales, including date, amount, payment method, and customer.</p>
+        </div>
+        <a href="/reports/api/download/sales" class="btn btn-primary btn-block"><i class="fa-solid fa-download"></i> Download CSV</a>
+    </div>
+
+    <div class="kpi-card">
+        <div style="margin-bottom: 1.5rem;">
+            <div class="kpi-icon amber" style="margin-bottom: 1rem;"><i class="fa-solid fa-file-invoice"></i></div>
+            <h3 style="margin-bottom: 0.5rem;">Expenses Report</h3>
+            <p class="text-muted" style="font-size: 0.9rem;">Comprehensive list of all logged business expenses categorized for easy accounting.</p>
+        </div>
+        <a href="/reports/api/download/expenses" class="btn btn-primary btn-block"><i class="fa-solid fa-download"></i> Download CSV</a>
+    </div>
+
+    <div class="kpi-card">
+        <div style="margin-bottom: 1.5rem;">
+            <div class="kpi-icon purple" style="margin-bottom: 1rem;"><i class="fa-solid fa-file-lines"></i></div>
+            <h3 style="margin-bottom: 0.5rem;">Inventory Report</h3>
+            <p class="text-muted" style="font-size: 0.9rem;">Snapshot of current stock levels, buying/selling prices, and total stock valuation.</p>
+        </div>
+        <a href="/reports/api/download/inventory" class="btn btn-primary btn-block"><i class="fa-solid fa-download"></i> Download CSV</a>
+    </div>
+</div>
+{% endblock %}

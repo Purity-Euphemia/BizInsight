@@ -1,95 +1,107 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - {{ business['name'] }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-brand">BizInsight</div>
-        <div class="nav-links">
-            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('main.products') }}">Products</a>
-            <a href="{{ url_for('main.inventory') }}">Inventory</a>
-            <a href="{{ url_for('main.sales') }}">Sales</a>
-            <a href="{{ url_for('main.customers') }}">Customers</a>
-            <a href="{{ url_for('main.expenses') }}">Expenses</a>
-            <a href="{{ url_for('main.analytics') }}">Analytics</a>
-            <a href="{{ url_for('main.reports') }}">Reports</a>
-            <span class="user-greeting">| Hello, {{ g.user['username'] }}</span>
-            <span class="nav-notification" onclick="openNotificationModal()">🔔 Alerts <span class="badge-count" id="navBadgeCount">0</span></span>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm" style="margin-left: 10px;">Log Out</a>
+{% extends "layout_dashboard.html" %}
+{% block title %}Overview - BizInsight{% endblock %}
+
+{% block content %}
+<div class="flex-between align-center mb-4">
+    <div>
+        <h1 class="page-title">Good morning, {{ g.user['username'] }}</h1>
+        <p class="page-subtitle">Here's what's happening with your business today.</p>
+    </div>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Total Revenue (30d)</span>
+            <div class="kpi-icon blue"><i class="fa-solid fa-money-bill-trend-up"></i></div>
         </div>
-    </nav>
-
-    <div class="container">
-        <header class="dashboard-header">
-            <h1>Business Dashboard</h1>
-            <p>At-a-glance overview of your business performance.</p>
-        </header>
-
-        <div class="metric-grid">
-            <div class="metric-card">
-                <div class="metric-title">Total Revenue</div>
-                <div class="metric-value" id="metric-revenue">$0.00</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-title">Gross Profit</div>
-                <div class="metric-value" id="metric-gross-profit">$0.00</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-title">Total Expenses</div>
-                <div class="metric-value text-error" id="metric-expenses">-$0.00</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-title">Net Profit</div>
-                <div class="metric-value" id="metric-net-profit">$0.00</div>
-            </div>
-            <div class="metric-card" style="border-left: 4px solid var(--error-color);">
-                <div class="metric-title">Low Stock Alerts</div>
-                <div class="metric-value text-error" id="metric-low-stock">0</div>
-            </div>
+        <div class="kpi-value" id="metric-revenue">Loading...</div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Gross Profit (30d)</span>
+            <div class="kpi-icon purple"><i class="fa-solid fa-chart-simple"></i></div>
         </div>
+        <div class="kpi-value" id="metric-gross-profit">Loading...</div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Total Expenses (30d)</span>
+            <div class="kpi-icon amber"><i class="fa-solid fa-receipt"></i></div>
+        </div>
+        <div class="kpi-value text-danger" id="metric-expenses">Loading...</div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Net Profit (30d)</span>
+            <div class="kpi-icon green"><i class="fa-solid fa-wallet"></i></div>
+        </div>
+        <div class="kpi-value" id="metric-net-profit">Loading...</div>
+    </div>
+</div>
 
-        <div class="dashboard-tables" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
-            <div class="card">
-                <h3 style="margin-top: 0;">Recent Sales</h3>
+<!-- Main Content Grid -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    
+    <!-- Left Column -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="card">
+            <h3 style="margin-bottom: 1.5rem;">Sales Overview (30 Days)</h3>
+            <canvas id="salesTrendChart" style="max-height: 300px;"></canvas>
+        </div>
+        
+        <div class="card">
+            <div class="flex-between" style="margin-bottom: 1.5rem;">
+                <h3>Recent Transactions</h3>
+                <a href="{{ url_for('main.sales') }}" class="btn btn-secondary btn-sm">View All</a>
+            </div>
+            <div class="table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Sale ID</th>
                             <th>Date</th>
-                            <th>Total</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody id="recentSalesBody">
-                        <!-- Loaded via JS -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="card">
-                <h3 style="margin-top: 0;">Top Selling Products</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Total Sold</th>
-                        </tr>
-                    </thead>
-                    <tbody id="topProductsBody">
-                        <!-- Loaded via JS -->
+                    <tbody id="recentTransactionsBody">
+                        <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', fetchDashboardMetrics);
-    </script>
-</body>
-</html>
+    
+    <!-- Right Column -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="card">
+            <h3 style="margin-bottom: 1.5rem;">Top Selling Products</h3>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th style="text-align: right;">Units Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductsBody">
+                        <tr><td colspan="2" class="text-center text-muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card" style="border-top: 4px solid var(--warning);">
+            <h3 style="margin-bottom: 1.5rem;">Low Stock Alerts</h3>
+            <div id="lowStockAlertsList">
+                <div class="text-center text-muted">Loading...</div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
