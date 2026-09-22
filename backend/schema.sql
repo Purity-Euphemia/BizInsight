@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS businesses;
 DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS inventory_transactions;
+DROP TABLE IF EXISTS sales;
+DROP TABLE IF EXISTS sale_items;
 
 CREATE TABLE businesses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,5 +59,26 @@ CREATE TABLE inventory_transactions (
     FOREIGN KEY (business_id) REFERENCES businesses (id),
     FOREIGN KEY (product_id) REFERENCES products (id)
 );
+
+CREATE TABLE sales (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL,
+    total_amount REAL NOT NULL DEFAULT 0.0,
+    payment_method TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (business_id) REFERENCES businesses (id)
+);
+
+CREATE TABLE sale_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sale_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    unit_price REAL NOT NULL,
+    subtotal REAL NOT NULL,
+    FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products (id)
+);
+
 
 
