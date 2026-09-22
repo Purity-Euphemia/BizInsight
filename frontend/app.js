@@ -668,3 +668,193 @@ async function viewCustomerHistory(id) {
         alert('Failed to load history.');
     }
 }
+
+// EXPENSES FUNCTIONS
+let expenses = [];
+
+async function fetchExpenses() {
+    try {
+        const response = await fetch('/expenses/api');
+        expenses = await response.json();
+        renderExpenses();
+    } catch (error) {
+        console.error('Error fetching expenses:', error);
+    }
+}
+
+function renderExpenses() {
+    const tbody = document.getElementById('expenseTableBody');
+    if (!tbody) return;
+    
+    const search = document.getElementById('expenseSearch')?.value.toLowerCase() || '';
+    tbody.innerHTML = '';
+    
+    const filtered = expenses.filter(e => 
+        e.title.toLowerCase().includes(search) || 
+        (e.category && e.category.toLowerCase().includes(search))
+    );
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No expenses found.</td></tr>';
+        return;
+    }
+    
+    filtered.forEach(e => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${e.expense_date}</td>
+            <td style="font-weight:bold;">${escapeHtml(e.title)}</td>
+            <td><span class="badge" style="background:#e5e7eb; color:#374151; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem;">${escapeHtml(e.category)}</span></td>
+            <td style="color:var(--error-color); font-weight:bold;">-$${e.amount.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-sm btn-secondary" onclick='editExpense(${JSON.stringify(e).replace(/'/g, "&#39;")})'>Edit</button>
+                <button class="btn btn-sm btn-error" onclick="deleteExpense(${e.id})">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function filterExpenses() {
+    renderExpenses();
+}
+
+function openExpenseModal() {
+    document.getElementById('expenseForm').reset();
+    document.getElementById('expenseId').value = '';
+    // Set today's date as default
+    document.getElementById('expense_date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('modalTitle').textContent = 'Add Expense';
+    document.getElementById('formError').style.display = 'none';
+    document.getElementById('expenseModal').style.display = 'block';
+}
+
+function closeExpenseModal() {
+    document.getElementById('expenseModal').style.display = 'none';
+}
+
+function editExpense(expense) {
+    document.getElementById('expenseId').value = expense.id;
+    document.getElementById('title').value = expense.title;
+    document.getElementById('amount').value = expense.amount;
+    document.getElementById('category').value = expense.category;
+    document.getElementById('expense_date').value = expense.expense_date;
+    
+    document.getElementById('modalTitle').textContent = 'Edit Expense';
+    document.getElementById('formError').style.display = 'none';
+    document.getElementById('expenseModal').style.display = 'block';
+}
+
+async function saveExpense(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('expenseId').value;
+    const url = id ? `/expenses/api/${id}` : '/expenses/api';
+    const method = id ? 'PUT' : 'POST';
+    
+    const payload = {
+        title: document.getElementById('title').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        category: document.getElementById('category').value,
+        expense_date: document.getElementById('expense_date').value
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            closeExpenseModal();
+            fetchExpenses();
+        } else {
+            const errorDiv = document.getElementById('formError');
+            errorDiv.textContent = result.error || 'Failed to save expense';
+            errorDiv.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error saving expense:', error);
+    }
+}
+
+async function deleteExpense(id) {
+    if (!confirm('Are you sure you want to delete this expense?')) return;
+    
+    try {
+        const response = await fetch(`/expenses/api/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            fetchExpenses();
+        } else {
+            alert('Failed to delete expense');
+        }
+    } catch (error) {
+        console.error('Error deleting expense:', error);
+    }
+}
+
+// DASHBOARD FUNCTIONS
+async function fetchDashboardMetrics() {
+    try {
+        const response = await fetch('/dashboard/api/metrics');
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error);
+        
+        const m = data.metrics;
+        
+        document.getElementById('metric-revenue').textContent = `$${m.revenue.toFixed(2)}`;
+        document.getElementById('metric-gross-profit').textContent = `$${m.gross_profit.toFixed(2)}`;
+        document.getElementById('metric-expenses').textContent = `-$${m.expenses.toFixed(2)}`;
+        
+        const npEl = document.getElementById('metric-net-profit');
+        npEl.textContent = `$${m.net_profit.toFixed(2)}`;
+        if (m.net_profit < 0) {
+            npEl.classList.add('text-error');
+        } else {
+            npEl.classList.remove('text-error');
+            if (m.net_profit > 0) npEl.style.color = 'var(--success-color, #10b981)';
+        }
+        
+        document.getElementById('metric-low-stock').textContent = m.low_stock_count;
+        
+        // Recent Sales
+        const salesBody = document.getElementById('recentSalesBody');
+        salesBody.innerHTML = '';
+        if (data.recent_sales.length === 0) {
+            salesBody.innerHTML = '<tr><td colspan="3" class="text-center">No recent sales.</td></tr>';
+        } else {
+            data.recent_sales.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${s.id}</td>
+                    <td>${new Date(s.created_at).toLocaleDateString()}</td>
+                    <td style="font-weight:bold;">$${s.total_amount.toFixed(2)}</td>
+                `;
+                salesBody.appendChild(tr);
+            });
+        }
+        
+        // Top Products
+        const topBody = document.getElementById('topProductsBody');
+        topBody.innerHTML = '';
+        if (data.top_products.length === 0) {
+            topBody.innerHTML = '<tr><td colspan="2" class="text-center">No sales data.</td></tr>';
+        } else {
+            data.top_products.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${escapeHtml(p.name)}</td>
+                    <td style="font-weight:bold;">${p.total_sold} units</td>
+                `;
+                topBody.appendChild(tr);
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error fetching dashboard metrics:', error);
+    }
+}

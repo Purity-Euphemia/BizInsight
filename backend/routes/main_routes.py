@@ -50,6 +50,13 @@ def customers():
     """Render the customer management page."""
     return render_template('customers.html')
 
+@bp.route('/expenses')
+@login_required
+def expenses():
+    """Render the expenses tracking page."""
+    return render_template('expenses.html')
+
+
 
 
 

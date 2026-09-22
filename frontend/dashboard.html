@@ -15,6 +15,7 @@
             <a href="{{ url_for('main.inventory') }}">Inventory</a>
             <a href="{{ url_for('main.sales') }}">Sales</a>
             <a href="{{ url_for('main.customers') }}">Customers</a>
+            <a href="{{ url_for('main.expenses') }}">Expenses</a>
             <span class="user-greeting">| Hello, {{ g.user['username'] }}</span>
             <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Log Out</a>
         </div>
@@ -22,20 +23,70 @@
 
     <div class="container">
         <header class="dashboard-header">
-            <h1>{{ business['name'] }} Dashboard</h1>
-            <p>Welcome to your business overview.</p>
+            <h1>Business Dashboard</h1>
+            <p>At-a-glance overview of your business performance.</p>
         </header>
 
-        <main>
-            <div class="card">
-                <h2>Business Profile</h2>
-                <ul>
-                    <li><strong>Business Name:</strong> {{ business['name'] }}</li>
-                    <li><strong>Currency:</strong> {{ business['currency'] }}</li>
-                </ul>
-                <p class="status-success mt-4">Authentication and Business Accounts setup complete!</p>
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-title">Total Revenue</div>
+                <div class="metric-value" id="metric-revenue">$0.00</div>
             </div>
-        </main>
+            <div class="metric-card">
+                <div class="metric-title">Gross Profit</div>
+                <div class="metric-value" id="metric-gross-profit">$0.00</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Total Expenses</div>
+                <div class="metric-value text-error" id="metric-expenses">-$0.00</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Net Profit</div>
+                <div class="metric-value" id="metric-net-profit">$0.00</div>
+            </div>
+            <div class="metric-card" style="border-left: 4px solid var(--error-color);">
+                <div class="metric-title">Low Stock Alerts</div>
+                <div class="metric-value text-error" id="metric-low-stock">0</div>
+            </div>
+        </div>
+
+        <div class="dashboard-tables" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+            <div class="card">
+                <h3 style="margin-top: 0;">Recent Sales</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Sale ID</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentSalesBody">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">Top Selling Products</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Total Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductsBody">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchDashboardMetrics);
+    </script>
 </body>
 </html>

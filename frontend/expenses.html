@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses - BizInsight</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">BizInsight</div>
+        <div class="nav-links">
+            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('main.products') }}">Products</a>
+            <a href="{{ url_for('main.inventory') }}">Inventory</a>
+            <a href="{{ url_for('main.sales') }}">Sales</a>
+            <a href="{{ url_for('main.customers') }}">Customers</a>
+            <a href="{{ url_for('main.expenses') }}">Expenses</a>
+            <span class="user-greeting">| Hello, {{ g.user['username'] }}</span>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 1000px;">
+        <header class="dashboard-header flex-between">
+            <div>
+                <h1>Expenses</h1>
+                <p>Track your business operating costs.</p>
+            </div>
+            <button class="btn btn-primary" onclick="openExpenseModal()">+ Add Expense</button>
+        </header>
+
+        <div class="card toolbar">
+            <input type="text" id="expenseSearch" placeholder="Search expenses by title or category..." onkeyup="filterExpenses()">
+        </div>
+
+        <div class="card mt-4">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="expenseTableBody">
+                    <!-- Expenses will be loaded here via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Expense</h2>
+                <span class="close" onclick="closeExpenseModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="expenseForm" onsubmit="saveExpense(event)">
+                    <input type="hidden" id="expenseId">
+                    <div id="formError" class="alert alert-error" style="display: none;"></div>
+                    
+                    <div class="form-group">
+                        <label for="title">Expense Title *</label>
+                        <input type="text" id="title" required placeholder="e.g. May Shop Rent">
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Amount ($) *</label>
+                        <input type="number" id="amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="Rent">Rent</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Payroll">Payroll</option>
+                            <option value="Inventory">Inventory (Non-Product)</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Other" selected>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="expense_date">Date *</label>
+                        <input type="date" id="expense_date" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeExpenseModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Expense</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchExpenses);
+    </script>
+</body>
+</html>

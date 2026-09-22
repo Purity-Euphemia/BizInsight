@@ -173,6 +173,45 @@ h1 {
     flex-direction: row;
 }
 
+.text-center { text-align: center; }
+.text-error { color: var(--error-color) !important; }
+.mt-4 { margin-top: 1.5rem; }
+
+/* Dashboard Metrics Grid */
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.metric-card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-top: 4px solid var(--primary-color);
+}
+
+.metric-title {
+    font-size: 0.9rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+
 .text-center {
     text-align: center;
 }

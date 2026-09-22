@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS inventory_transactions;
 DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS sales;
 DROP TABLE IF EXISTS sale_items;
+DROP TABLE IF EXISTS expenses;
 
 CREATE TABLE businesses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -93,6 +94,18 @@ CREATE TABLE sale_items (
     FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products (id)
 );
+
+CREATE TABLE expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    amount REAL NOT NULL,
+    category TEXT,
+    expense_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (business_id) REFERENCES businesses (id)
+);
+
 
 
 
