@@ -1,29 +1,50 @@
 {% extends "layout_auth.html" %}
 {% block title %}Log In - BizInsight{% endblock %}
 
-{% block content %}
-<div class="auth-container">
-    <div class="auth-header">
-        <h1>Welcome back</h1>
-        <p>Enter your details to access your dashboard.</p>
+{% block left_content %}
+    <h1 style="margin-top: auto;">Welcome back</h1>
+    <p>Log in to your account and continue managing your business with ease.</p>
+    
+    <!-- Abstract illustration matching Figma -->
+    <div style="margin-top: auto; position: relative; height: 200px; display: flex; align-items: flex-end; gap: 1rem;">
+        <div style="width: 30px; height: 80px; background: var(--brand-blue); border-radius: 4px 4px 0 0;"></div>
+        <div style="width: 30px; height: 140px; background: #38BDF8; border-radius: 4px 4px 0 0;"></div>
+        <div style="width: 30px; height: 100px; background: #A78BFA; border-radius: 4px 4px 0 0;"></div>
+        <div style="width: 30px; height: 160px; background: #34D399; border-radius: 4px 4px 0 0;"></div>
+        <!-- Trend line -->
+        <svg style="position: absolute; left: 10px; bottom: 80px; width: 140px; height: 100px;" viewBox="0 0 140 100" fill="none" stroke="white" stroke-width="3">
+            <path d="M0,80 L40,30 L80,50 L140,0" />
+            <circle cx="140" cy="0" r="5" fill="white" />
+        </svg>
     </div>
+{% endblock %}
 
-    <form action="{{ url_for('auth.login') }}" method="post">
+{% block right_content %}
+    <h2>Log In</h2>
+    <p>Access your dashboard and business data.</p>
+    
+    <form action="{{ url_for('auth.login') }}" method="post" style="margin-top: 2.5rem;">
         <div class="form-group">
-            <label class="form-label" for="username">Username / Email</label>
-            <input class="form-control" type="text" name="username" id="username" required>
+            <label class="form-label" for="username">Email Address</label>
+            <input class="form-control" type="text" name="username" id="username" placeholder="Enter your email address" required>
         </div>
         
         <div class="form-group">
             <label class="form-label" for="password">Password</label>
-            <input class="form-control" type="password" name="password" id="password" required>
+            <input class="form-control" type="password" name="password" id="password" placeholder="Enter your password" required>
         </div>
         
-        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Log In</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-primary); cursor: pointer;">
+                <input type="checkbox" checked style="width: 16px; height: 16px; accent-color: var(--brand-blue);"> Remember me
+            </label>
+            <a href="#" style="font-size: 0.875rem; font-weight: 500;">Forgot password?</a>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.875rem; font-size: 1rem;">Log In</button>
     </form>
     
-    <div class="auth-footer">
-        Don't have an account? <a href="{{ url_for('auth.register') }}">Create account</a>
+    <div style="text-align: center; margin-top: 2.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+        Don't have an account? <a href="{{ url_for('auth.register') }}" style="font-weight: 600;">Create account</a>
     </div>
-</div>
 {% endblock %}

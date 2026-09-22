@@ -4,83 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}BizInsight{% endblock %}</title>
-    <!-- Use Google Fonts (Inter) -->
+    <!-- Google Fonts (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome for icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Main CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        /* Specific overrides for auth layout */
-        body {
-            background-color: var(--bg-neutral);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        .auth-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 5%;
-            background: transparent;
-        }
-        .auth-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-deep);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .auth-brand i { color: var(--primary-blue); }
-        
-        .main-auth-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-        
-        /* Flashed messages */
-        .flashes {
-            width: 100%;
-            max-width: 450px;
-            margin: 0 auto 1rem auto;
-            list-style: none;
-            padding: 0;
-        }
-    </style>
     {% block head %}{% endblock %}
 </head>
 <body>
 
-    <nav class="auth-nav">
-        <a href="{{ url_for('main.index') }}" class="auth-brand"><i class="fa-solid fa-chart-pie"></i> BizInsight</a>
-        <div class="auth-links">
-            {% block nav_links %}
+    <div class="auth-wrapper">
+        <!-- Left Side: Deep Navy Branding -->
+        <div class="auth-left">
+            <a href="{{ url_for('main.index') }}" class="auth-brand"><i class="fa-solid fa-chart-pie"></i> BizInsight</a>
+            {% block left_content %}
             {% endblock %}
         </div>
-    </nav>
-
-    <main class="main-auth-content">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <ul class="flashes">
-            {% for category, message in messages %}
-              <li class="alert alert-{{ category if category != 'error' else 'danger' }}">{{ message }}</li>
-            {% endfor %}
-            </ul>
-          {% endif %}
-        {% endwith %}
-
-        {% block content %}{% endblock %}
-    </main>
+        
+        <!-- Right Side: White Form Area -->
+        <div class="auth-right">
+            <div class="auth-form-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category if category != 'error' else 'danger' }}">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+                
+                {% block right_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
