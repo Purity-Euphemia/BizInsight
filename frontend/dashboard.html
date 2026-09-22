@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - {{ business['name'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">BizInsight</div>
+        <div class="nav-links">
+            <span class="user-greeting">Hello, {{ g.user['username'] }}</span>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="dashboard-header">
+            <h1>{{ business['name'] }} Dashboard</h1>
+            <p>Welcome to your business overview.</p>
+        </header>
+
+        <main>
+            <div class="card">
+                <h2>Business Profile</h2>
+                <ul>
+                    <li><strong>Business Name:</strong> {{ business['name'] }}</li>
+                    <li><strong>Currency:</strong> {{ business['currency'] }}</li>
+                </ul>
+                <p class="status-success mt-4">Authentication and Business Accounts setup complete!</p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

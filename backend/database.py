@@ -28,3 +28,28 @@ def close_db(e=None):
 
     if db is not None:
         db.close()
+
+def init_db():
+    """Clear existing data and create new tables."""
+    db = get_db()
+    
+    # Locate the schema.sql file
+    schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
+    
+    with open(schema_path, 'r', encoding='utf8') as f:
+        db.executescript(f.read())
+
+import click
+from flask.cli import with_appcontext
+
+@click.command('init-db')
+@with_appcontext
+def init_db_command():
+    """Clear the existing data and create new tables."""
+    init_db()
+    click.echo('Initialized the database.')
+
+def init_app(app):
+    """Register database functions with the Flask app."""
+    app.teardown_appcontext(close_db)
+    app.cli.add_command(init_db_command)

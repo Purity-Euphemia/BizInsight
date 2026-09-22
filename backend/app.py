@@ -28,11 +28,12 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # Register database close function to run at the end of each request
-    app.teardown_appcontext(database.close_db)
+    # Register database connection handling and CLI commands
+    database.init_app(app)
 
     # Register blueprints (routes)
-    from backend.routes import main_routes
+    from backend.routes import auth_routes, main_routes
+    app.register_blueprint(auth_routes.bp)
     app.register_blueprint(main_routes.bp)
 
     return app

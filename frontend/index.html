@@ -8,9 +8,17 @@
       Notice how we link to the static files. 
       Flask handles the '/static/' prefix because we configured it in app.py 
     -->
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <nav class="navbar">
+        <div class="nav-brand">BizInsight</div>
+        <div class="nav-links">
+            <a href="{{ url_for('auth.login') }}">Log In</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
+        </div>
+    </nav>
+
     <div class="container">
         <header>
             <h1>Welcome to BizInsight</h1>
@@ -19,13 +27,13 @@
         
         <main>
             <div class="card">
-                <h2>Phase 1 Status</h2>
-                <p class="status-success">Flask setup is complete and running successfully!</p>
-                <p>This means the frontend and backend are communicating.</p>
+                <h2>Phase 1 & 2 Status</h2>
+                <p class="status-success">Flask setup and Authentication are ready!</p>
+                <p>Register an account to see your new dashboard.</p>
             </div>
         </main>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
