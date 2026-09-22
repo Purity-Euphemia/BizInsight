@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS businesses;
 DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS inventory_transactions;
+DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS sales;
 DROP TABLE IF EXISTS sale_items;
 
@@ -23,6 +24,17 @@ CREATE TABLE users (
     business_id INTEGER NOT NULL,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (business_id) REFERENCES businesses (id)
+);
+
+CREATE TABLE customers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    address TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses (id)
 );
@@ -63,10 +75,12 @@ CREATE TABLE inventory_transactions (
 CREATE TABLE sales (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     business_id INTEGER NOT NULL,
+    customer_id INTEGER,
     total_amount REAL NOT NULL DEFAULT 0.0,
     payment_method TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (business_id) REFERENCES businesses (id)
+    FOREIGN KEY (business_id) REFERENCES businesses (id),
+    FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE SET NULL
 );
 
 CREATE TABLE sale_items (
@@ -79,6 +93,7 @@ CREATE TABLE sale_items (
     FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products (id)
 );
+
 
 
 

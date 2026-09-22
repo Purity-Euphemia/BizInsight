@@ -16,6 +16,7 @@ def checkout():
     
     items = data.get('items', [])
     payment_method = data.get('payment_method', 'Cash')
+    customer_id = data.get('customer_id') # Optional
     
     if not items:
         return jsonify({'error': 'Cart is empty'}), 400
@@ -61,8 +62,8 @@ def checkout():
             
         # All items verified. Now record the sale.
         cursor = db.execute(
-            "INSERT INTO sales (business_id, total_amount, payment_method) VALUES (?, ?, ?)",
-            (business_id, total_amount, payment_method)
+            "INSERT INTO sales (business_id, customer_id, total_amount, payment_method) VALUES (?, ?, ?, ?)",
+            (business_id, customer_id, total_amount, payment_method)
         )
         sale_id = cursor.lastrowid
         
@@ -104,10 +105,11 @@ def history():
     db = get_db()
     
     sales = db.execute(
-        """SELECT id, total_amount, payment_method, created_at 
-           FROM sales 
-           WHERE business_id = ? 
-           ORDER BY created_at DESC 
+        """SELECT s.id, s.total_amount, s.payment_method, s.created_at, c.name as customer_name
+           FROM sales s
+           LEFT JOIN customers c ON s.customer_id = c.id
+           WHERE s.business_id = ? 
+           ORDER BY s.created_at DESC 
            LIMIT 50""",
         (g.user['business_id'],)
     ).fetchall()
