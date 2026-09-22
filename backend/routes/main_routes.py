@@ -44,6 +44,13 @@ def sales():
     """Render the Point of Sale and Sales History page."""
     return render_template('sales.html')
 
+@bp.route('/customers')
+@login_required
+def customers():
+    """Render the customer management page."""
+    return render_template('customers.html')
+
+
 
 
 
