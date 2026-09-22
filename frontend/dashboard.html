@@ -10,7 +10,9 @@
     <nav class="navbar">
         <div class="nav-brand">BizInsight</div>
         <div class="nav-links">
-            <span class="user-greeting">Hello, {{ g.user['username'] }}</span>
+            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('main.products') }}">Products</a>
+            <span class="user-greeting">| Hello, {{ g.user['username'] }}</span>
             <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Log Out</a>
         </div>
     </nav>

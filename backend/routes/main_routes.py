@@ -26,3 +26,10 @@ def dashboard():
     
     return render_template('dashboard.html', business=business)
 
+@bp.route('/products')
+@login_required
+def products():
+    """Render the product management page."""
+    return render_template('products.html')
+
+
