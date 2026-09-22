@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizInsight</title>
+    <!-- 
+      Notice how we link to the static files. 
+      Flask handles the '/static/' prefix because we configured it in app.py 
+    -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Welcome to BizInsight</h1>
+            <p>Your business intelligence and management platform.</p>
+        </header>
+        
+        <main>
+            <div class="card">
+                <h2>Phase 1 Status</h2>
+                <p class="status-success">Flask setup is complete and running successfully!</p>
+                <p>This means the frontend and backend are communicating.</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
