@@ -38,5 +38,12 @@ def inventory():
     """Render the inventory management page."""
     return render_template('inventory.html')
 
+@bp.route('/sales')
+@login_required
+def sales():
+    """Render the Point of Sale and Sales History page."""
+    return render_template('sales.html')
+
+
 
 

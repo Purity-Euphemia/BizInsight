@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales - BizInsight</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .pos-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .pos-products {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .pos-cart {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            max-height: 70vh;
+        }
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .cart-item-info { flex: 1; }
+        .cart-item-title { font-weight: 600; font-size: 0.95rem; }
+        .cart-item-price { color: #6b7280; font-size: 0.85rem; }
+        .cart-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .cart-qty-btn {
+            background: #f3f4f6;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .cart-qty-btn:hover { background: #e5e7eb; }
+        .cart-qty { font-weight: 600; width: 20px; text-align: center; }
+        
+        .cart-summary {
+            border-top: 2px solid #e5e7eb;
+            padding-top: 1rem;
+        }
+        .cart-total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .checkout-btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .product-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.2s;
+        }
+        .product-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        .product-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .product-card-title { font-weight: 600; margin-bottom: 0.25rem; font-size: 0.95rem; }
+        .product-card-price { color: var(--primary-color); font-weight: bold; margin-bottom: 0.25rem; }
+        .product-card-stock { font-size: 0.8rem; color: #6b7280; }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; }
+        .tab { padding: 0.5rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { border-bottom-color: var(--primary-color); font-weight: bold; color: var(--primary-color); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">BizInsight</div>
+        <div class="nav-links">
+            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('main.products') }}">Products</a>
+            <a href="{{ url_for('main.inventory') }}">Inventory</a>
+            <a href="{{ url_for('main.sales') }}">Sales</a>
+            <span class="user-greeting">| Hello, {{ g.user['username'] }}</span>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 1200px;">
+        <header class="dashboard-header">
+            <h1>Point of Sale</h1>
+            <p>Ring up customers and view past transactions.</p>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('pos')">Point of Sale</div>
+            <div class="tab" onclick="switchTab('history'); fetchSalesHistory();">Sales History</div>
+        </div>
+
+        <!-- POS TAB -->
+        <div id="posTab" class="tab-content active">
+            <div class="pos-container">
+                <!-- Products Panel -->
+                <div class="pos-products">
+                    <input type="text" id="posSearch" placeholder="Search products..." onkeyup="filterPOSProducts()" style="width:100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px;">
+                    <div class="product-grid" id="posProductGrid">
+                        <!-- Loaded via JS -->
+                    </div>
+                </div>
+
+                <!-- Cart Panel -->
+                <div class="pos-cart">
+                    <h2 style="margin-top:0; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">Current Cart</h2>
+                    
+                    <div class="cart-items" id="cartItems">
+                        <!-- Loaded via JS -->
+                        <div class="text-center" style="color: #9ca3af; margin-top: 2rem;">Cart is empty</div>
+                    </div>
+                    
+                    <div class="cart-summary">
+                        <div class="form-group">
+                            <label for="paymentMethod" style="font-size: 0.9rem;">Payment Method</label>
+                            <select id="paymentMethod" style="width:100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                                <option value="Cash">Cash</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Mobile Payment">Mobile Payment</option>
+                            </select>
+                        </div>
+                        <div class="cart-total-row">
+                            <span>Total</span>
+                            <span id="cartTotal">$0.00</span>
+                        </div>
+                        <button class="btn btn-primary checkout-btn" id="checkoutBtn" onclick="checkout()" disabled>Checkout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div id="historyTab" class="tab-content">
+            <div class="card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Sale ID</th>
+                            <th>Date</th>
+                            <th>Payment Method</th>
+                            <th>Total Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesHistoryBody">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receiptModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Receipt</h2>
+                <span class="close" onclick="document.getElementById('receiptModal').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body" id="receiptBody">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchPOSProducts);
+    </script>
+</body>
+</html>

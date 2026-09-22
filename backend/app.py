@@ -32,11 +32,12 @@ def create_app(test_config=None):
     database.init_app(app)
 
     # Register blueprints (routes)
-    from backend.routes import auth_routes, main_routes, product_routes, inventory_routes
+    from backend.routes import auth_routes, main_routes, product_routes, inventory_routes, sales_routes
     app.register_blueprint(auth_routes.bp)
     app.register_blueprint(main_routes.bp)
     app.register_blueprint(product_routes.bp)
     app.register_blueprint(inventory_routes.bp)
+    app.register_blueprint(sales_routes.bp)
 
     return app
 

@@ -243,7 +243,245 @@ async function submitAdjustment(event) {
             errorDiv.textContent = result.error || 'Failed to adjust stock';
             errorDiv.style.display = 'block';
         }
+// SALES AND POS FUNCTIONS
+let posProducts = [];
+let cart = [];
+
+function switchTab(tabId) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(tabId + 'Tab').classList.add('active');
+}
+
+async function fetchPOSProducts() {
+    try {
+        const response = await fetch('/products/api');
+        posProducts = await response.json();
+        renderPOSProducts();
     } catch (error) {
-        console.error('Error adjusting stock:', error);
+        console.error('Error fetching POS products:', error);
+    }
+}
+
+function renderPOSProducts() {
+    const grid = document.getElementById('posProductGrid');
+    if (!grid) return;
+    
+    const search = document.getElementById('posSearch').value.toLowerCase();
+    grid.innerHTML = '';
+    
+    posProducts.forEach(p => {
+        if (!p.name.toLowerCase().includes(search)) return;
+        
+        const isOutOfStock = p.quantity <= 0;
+        
+        const card = document.createElement('div');
+        card.className = `product-card ${isOutOfStock ? 'disabled' : ''}`;
+        card.onclick = () => { if (!isOutOfStock) addToCart(p); };
+        
+        card.innerHTML = `
+            <div class="product-card-title">${escapeHtml(p.name)}</div>
+            <div class="product-card-price">$${p.selling_price.toFixed(2)}</div>
+            <div class="product-card-stock">${isOutOfStock ? 'Out of Stock' : p.quantity + ' in stock'}</div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function filterPOSProducts() {
+    renderPOSProducts();
+}
+
+function addToCart(product) {
+    const existingItem = cart.find(i => i.product_id === product.id);
+    
+    if (existingItem) {
+        if (existingItem.quantity < product.quantity) {
+            existingItem.quantity += 1;
+        } else {
+            alert('Cannot add more than available stock.');
+        }
+    } else {
+        cart.push({
+            product_id: product.id,
+            name: product.name,
+            unit_price: product.selling_price,
+            quantity: 1,
+            max_stock: product.quantity
+        });
+    }
+    renderCart();
+}
+
+function changeCartQty(productId, delta) {
+    const item = cart.find(i => i.product_id === productId);
+    if (!item) return;
+    
+    const newQty = item.quantity + delta;
+    if (newQty <= 0) {
+        cart = cart.filter(i => i.product_id !== productId);
+    } else if (newQty > item.max_stock) {
+        alert('Cannot exceed available stock.');
+    } else {
+        item.quantity = newQty;
+    }
+    renderCart();
+}
+
+function renderCart() {
+    const cartEl = document.getElementById('cartItems');
+    const totalEl = document.getElementById('cartTotal');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    
+    if (!cartEl) return;
+    
+    cartEl.innerHTML = '';
+    let total = 0;
+    
+    if (cart.length === 0) {
+        cartEl.innerHTML = '<div class="text-center" style="color: #9ca3af; margin-top: 2rem;">Cart is empty</div>';
+        totalEl.textContent = '$0.00';
+        checkoutBtn.disabled = true;
+        return;
+    }
+    
+    cart.forEach(item => {
+        const subtotal = item.unit_price * item.quantity;
+        total += subtotal;
+        
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+            <div class="cart-item-info">
+                <div class="cart-item-title">${escapeHtml(item.name)}</div>
+                <div class="cart-item-price">$${item.unit_price.toFixed(2)} x ${item.quantity} = $${subtotal.toFixed(2)}</div>
+            </div>
+            <div class="cart-controls">
+                <button class="cart-qty-btn" onclick="changeCartQty(${item.product_id}, -1)">-</button>
+                <span class="cart-qty">${item.quantity}</span>
+                <button class="cart-qty-btn" onclick="changeCartQty(${item.product_id}, 1)">+</button>
+            </div>
+        `;
+        cartEl.appendChild(div);
+    });
+    
+    totalEl.textContent = `$${total.toFixed(2)}`;
+    checkoutBtn.disabled = false;
+}
+
+async function checkout() {
+    if (cart.length === 0) return;
+    
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    checkoutBtn.disabled = true;
+    checkoutBtn.textContent = 'Processing...';
+    
+    const payload = {
+        payment_method: document.getElementById('paymentMethod').value,
+        items: cart.map(i => ({ product_id: i.product_id, quantity: i.quantity }))
+    };
+    
+    try {
+        const response = await fetch('/sales/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            cart = [];
+            renderCart();
+            await fetchPOSProducts(); // Refresh stock levels
+            alert(`Sale successful! Total: $${result.total_amount.toFixed(2)}`);
+        } else {
+            alert(result.error || 'Checkout failed');
+        }
+    } catch (error) {
+        console.error('Checkout error:', error);
+        alert('Checkout failed');
+    } finally {
+        checkoutBtn.disabled = cart.length === 0;
+        checkoutBtn.textContent = 'Checkout';
+    }
+}
+
+async function fetchSalesHistory() {
+    try {
+        const response = await fetch('/sales/api/history');
+        const sales = await response.json();
+        
+        const tbody = document.getElementById('salesHistoryBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (sales.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No sales recorded yet.</td></tr>';
+            return;
+        }
+
+        sales.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${s.id}</td>
+                <td>${new Date(s.created_at).toLocaleString()}</td>
+                <td>${escapeHtml(s.payment_method)}</td>
+                <td style="font-weight:bold;">$${s.total_amount.toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-sm btn-secondary" onclick="viewReceipt(${s.id})">View Receipt</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Error fetching sales history:', error);
+    }
+}
+
+async function viewReceipt(saleId) {
+    try {
+        const response = await fetch(`/sales/api/${saleId}`);
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error);
+        
+        const rb = document.getElementById('receiptBody');
+        
+        let html = `
+            <div style="text-align:center; margin-bottom: 1rem; border-bottom: 1px dashed #ccc; padding-bottom: 1rem;">
+                <h3 style="margin:0;">BizInsight Receipt</h3>
+                <div style="color:#666; font-size:0.85rem;">Sale #${data.sale.id}</div>
+                <div style="color:#666; font-size:0.85rem;">${new Date(data.sale.created_at).toLocaleString()}</div>
+            </div>
+            <table style="width:100%; font-size:0.9rem; margin-bottom:1rem;">
+        `;
+        
+        data.items.forEach(i => {
+            html += `
+                <tr>
+                    <td style="padding: 0.25rem 0;">${escapeHtml(i.product_name)} x${i.quantity}</td>
+                    <td style="text-align:right;">$${i.subtotal.toFixed(2)}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+            </table>
+            <div style="border-top: 1px solid #ccc; padding-top: 0.5rem; display:flex; justify-content:space-between; font-weight:bold; font-size:1.1rem;">
+                <span>Total</span>
+                <span>$${data.sale.total_amount.toFixed(2)}</span>
+            </div>
+            <div style="color:#666; font-size:0.85rem; margin-top:0.5rem;">Paid via ${escapeHtml(data.sale.payment_method)}</div>
+        `;
+        
+        rb.innerHTML = html;
+        document.getElementById('receiptModal').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error viewing receipt:', error);
+        alert('Failed to load receipt.');
     }
 }
