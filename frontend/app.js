@@ -149,3 +149,101 @@ function escapeHtml(unsafe) {
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
 }
+
+// INVENTORY FUNCTIONS
+
+async function fetchInventoryStatus() {
+    try {
+        const response = await fetch('/inventory/api/status');
+        const data = await response.json();
+        
+        // Update Stats
+        const statTotal = document.getElementById('statTotal');
+        const statLow = document.getElementById('statLow');
+        const statOut = document.getElementById('statOut');
+        
+        if (statTotal) statTotal.textContent = data.summary.total_products;
+        if (statLow) statLow.textContent = data.summary.low_stock;
+        if (statOut) statOut.textContent = data.summary.out_of_stock;
+        
+        // Update Table
+        const tbody = document.getElementById('inventoryTableBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (data.items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No products in inventory.</td></tr>';
+            return;
+        }
+
+        data.items.forEach(p => {
+            const tr = document.createElement('tr');
+            
+            let statusHtml = `<span class="badge badge-success">In Stock</span>`;
+            if (p.status === 'Out of Stock') {
+                statusHtml = `<span class="badge badge-error">Out of Stock</span>`;
+            } else if (p.status === 'Low Stock') {
+                statusHtml = `<span class="badge badge-warning">Low Stock</span>`;
+            }
+
+            tr.innerHTML = `
+                <td>${escapeHtml(p.name)}</td>
+                <td>${escapeHtml(p.category || '-')}</td>
+                <td style="font-size: 1.2rem; font-weight: bold;">${p.quantity}</td>
+                <td>${statusHtml}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="openAdjustModal(${p.id}, '${escapeHtml(p.name)}')">Adjust Stock</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+    } catch (error) {
+        console.error('Error fetching inventory:', error);
+    }
+}
+
+function openAdjustModal(productId, productName) {
+    document.getElementById('adjustForm').reset();
+    document.getElementById('adjustProductId').value = productId;
+    document.getElementById('adjustProductName').textContent = `Adjusting stock for: ${productName}`;
+    document.getElementById('adjustError').style.display = 'none';
+    document.getElementById('adjustModal').style.display = 'block';
+}
+
+function closeAdjustModal() {
+    document.getElementById('adjustModal').style.display = 'none';
+}
+
+async function submitAdjustment(event) {
+    event.preventDefault();
+    
+    const payload = {
+        product_id: document.getElementById('adjustProductId').value,
+        transaction_type: document.getElementById('transaction_type').value,
+        quantity: parseInt(document.getElementById('adjust_quantity').value, 10),
+        reference: document.getElementById('reference').value
+    };
+
+    try {
+        const response = await fetch('/inventory/api/adjust', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            closeAdjustModal();
+            fetchInventoryStatus();
+        } else {
+            const errorDiv = document.getElementById('adjustError');
+            errorDiv.textContent = result.error || 'Failed to adjust stock';
+            errorDiv.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error adjusting stock:', error);
+    }
+}

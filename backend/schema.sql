@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS businesses;
 DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS inventory_transactions;
 
 CREATE TABLE businesses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,4 +45,17 @@ CREATE TABLE products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses (id)
 );
+
+CREATE TABLE inventory_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    transaction_type TEXT NOT NULL, -- 'IN' or 'OUT'
+    quantity INTEGER NOT NULL,
+    reference TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (business_id) REFERENCES businesses (id),
+    FOREIGN KEY (product_id) REFERENCES products (id)
+);
+
 

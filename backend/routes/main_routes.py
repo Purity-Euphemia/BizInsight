@@ -32,4 +32,11 @@ def products():
     """Render the product management page."""
     return render_template('products.html')
 
+@bp.route('/inventory')
+@login_required
+def inventory():
+    """Render the inventory management page."""
+    return render_template('inventory.html')
+
+
 
