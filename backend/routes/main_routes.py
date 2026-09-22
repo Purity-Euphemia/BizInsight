@@ -62,6 +62,13 @@ def analytics():
     """Render the analytics and reporting page."""
     return render_template('analytics.html')
 
+@bp.route('/reports')
+@login_required
+def reports():
+    """Render the reports download page."""
+    return render_template('reports.html')
+
+
 
 
 
