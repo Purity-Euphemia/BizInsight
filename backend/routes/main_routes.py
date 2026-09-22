@@ -56,6 +56,13 @@ def expenses():
     """Render the expenses tracking page."""
     return render_template('expenses.html')
 
+@bp.route('/analytics')
+@login_required
+def analytics():
+    """Render the analytics and reporting page."""
+    return render_template('analytics.html')
+
+
 
 
 

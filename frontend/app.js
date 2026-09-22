@@ -858,3 +858,106 @@ async function fetchDashboardMetrics() {
         console.error('Error fetching dashboard metrics:', error);
     }
 }
+
+// ANALYTICS FUNCTIONS
+let chartInstances = {};
+
+async function fetchAnalytics() {
+    try {
+        await Promise.all([
+            loadSalesTrend(),
+            loadExpenseBreakdown(),
+            loadProfitTrend()
+        ]);
+    } catch (error) {
+        console.error('Error fetching analytics:', error);
+    }
+}
+
+async function loadSalesTrend() {
+    const ctx = document.getElementById('salesTrendChart')?.getContext('2d');
+    if (!ctx) return;
+    
+    const res = await fetch('/analytics/api/sales-trend');
+    const data = await res.json();
+    
+    if (chartInstances['salesTrend']) chartInstances['salesTrend'].destroy();
+    
+    chartInstances['salesTrend'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Daily Revenue',
+                data: data.data,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+async function loadExpenseBreakdown() {
+    const ctx = document.getElementById('expenseBreakdownChart')?.getContext('2d');
+    if (!ctx) return;
+    
+    const res = await fetch('/analytics/api/expense-breakdown');
+    const data = await res.json();
+    
+    if (chartInstances['expenseBreakdown']) chartInstances['expenseBreakdown'].destroy();
+    
+    chartInstances['expenseBreakdown'] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                data: data.data,
+                backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#64748b']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+}
+
+async function loadProfitTrend() {
+    const ctx = document.getElementById('profitTrendChart')?.getContext('2d');
+    if (!ctx) return;
+    
+    const res = await fetch('/analytics/api/profit-trend');
+    const data = await res.json();
+    
+    if (chartInstances['profitTrend']) chartInstances['profitTrend'].destroy();
+    
+    chartInstances['profitTrend'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [
+                {
+                    label: 'Revenue',
+                    data: data.revenue,
+                    backgroundColor: '#10b981'
+                },
+                {
+                    label: 'Expenses',
+                    data: data.expenses,
+                    backgroundColor: '#ef4444'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
