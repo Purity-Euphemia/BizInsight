@@ -36,6 +36,7 @@ CREATE TABLE customers (
     email TEXT,
     phone TEXT,
     address TEXT,
+    is_archived INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses (id)
 );

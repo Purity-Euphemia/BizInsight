@@ -5,62 +5,247 @@
 <div class="flex-between align-center" style="margin-bottom: 2rem;">
     <div>
         <h1 class="page-title">Customers</h1>
-        <p class="page-subtitle" style="margin-bottom: 0;">Manage your client relationships.</p>
+        <p class="page-subtitle" style="margin-bottom: 0;">Manage your customers and understand their buying activity.</p>
     </div>
-    <button class="btn btn-primary" onclick="openAddCustomerModal()">
-        <i class="fa-solid fa-user-plus"></i> Add Customer
-    </button>
+    <div class="header-actions">
+        <button class="btn btn-primary" onclick="openAddCustomerModal()"><i class="fa-solid fa-plus"></i> Add Customer</button>
+    </div>
 </div>
 
+<!-- Summary Cards -->
+<div class="kpi-grid" style="margin-bottom: 2rem;">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Total Customers</span>
+            <div class="kpi-icon blue"><i class="fa-solid fa-users"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiTotalCustomers">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>New Customers</span>
+            <div class="kpi-icon purple"><i class="fa-solid fa-user-plus"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiNewCustomers">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Returning Customers</span>
+            <div class="kpi-icon amber"><i class="fa-solid fa-rotate-left"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiReturningCustomers">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Total Customer Revenue</span>
+            <div class="kpi-icon green"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiTotalRevenue">--</div>
+    </div>
+</div>
+
+<!-- Main Table Card -->
 <div class="card">
-    <div class="table-container">
-        <table class="data-table" id="customersTable">
+    <!-- Toolbar -->
+    <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="search-box" style="flex: 1; min-width: 200px;">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" id="customerSearch" placeholder="Search customers..." class="form-control" oninput="debounceFetchCustomers()">
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <select id="customerTypeFilter" class="form-control" style="width: 150px;" onchange="filterCustomers()">
+                <option value="">All Types</option>
+                <option value="New">New</option>
+                <option value="Returning">Returning</option>
+            </select>
+            <select id="customerActivityFilter" class="form-control" style="width: 150px;" onchange="filterCustomers()">
+                <option value="">All Activity</option>
+                <option value="Active">Active Purchases</option>
+                <option value="None">No Purchases</option>
+            </select>
+            <select id="customerDateFilter" class="form-control" style="width: 150px;" onchange="filterCustomers()">
+                <option value="">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="data-table">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Email</th>
+                    <th>Customer</th>
                     <th>Phone</th>
-                    <th>Added Date</th>
-                    <th>Actions</th>
+                    <th>Email</th>
+                    <th style="text-align: center;">Total Purchases</th>
+                    <th>Total Spent</th>
+                    <th>Last Purchase</th>
+                    <th>Type</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody id="customersTableBody">
-                <tr><td colspan="5" class="text-center text-muted">Loading customers...</td></tr>
+                <tr><td colspan="8" class="text-center" style="padding: 3rem;"><i class="fa-solid fa-spinner fa-spin fa-2x text-muted"></i></td></tr>
             </tbody>
         </table>
     </div>
+    
+    <!-- Pagination -->
+    <div class="pagination-container flex-between align-center" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <div id="paginationInfo" style="color: var(--text-secondary); font-size: 0.875rem;">Showing 0 to 0 of 0 entries</div>
+        <div id="paginationButtons" style="display: flex; gap: 0.5rem;"></div>
+    </div>
 </div>
 
-<!-- Add Customer Modal -->
-<div id="addCustomerModal" class="modal">
-    <div class="modal-content">
+<!-- Add/Edit Customer Modal -->
+<div id="customerModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
         <div class="modal-header">
-            <h2>Add New Customer</h2>
-            <span class="close" onclick="closeAddCustomerModal()">&times;</span>
+            <h2 id="customerModalTitle">Add Customer</h2>
+            <span class="modal-close" onclick="closeCustomerModal()">&times;</span>
         </div>
-        <form id="addCustomerForm">
-            <div class="form-group">
+        <form id="customerForm" onsubmit="saveCustomer(event)">
+            <input type="hidden" id="customerId">
+            <div id="duplicateWarning" class="alert alert-warning" style="display: none; margin-bottom: 1rem;">
+                <i class="fa-solid fa-triangle-exclamation"></i> A customer with this contact information may already exist. Please verify.
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
                 <label class="form-label" for="customerName">Full Name *</label>
-                <input class="form-control" type="text" id="customerName" required>
+                <input type="text" id="customerName" class="form-control" required>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="customerEmail">Email Address</label>
-                <input class="form-control" type="email" id="customerEmail">
-            </div>
-            <div class="form-group">
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
                 <label class="form-label" for="customerPhone">Phone Number</label>
-                <input class="form-control" type="tel" id="customerPhone">
+                <input type="text" id="customerPhone" class="form-control" oninput="debounceDuplicateCheck()">
             </div>
-            <div class="form-group">
-                <label class="form-label" for="customerAddress">Address</label>
-                <input class="form-control" type="text" id="customerAddress">
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="customerEmail">Email Address</label>
+                <input type="email" id="customerEmail" class="form-control" oninput="debounceDuplicateCheck()">
             </div>
-            <div id="customerError" class="alert alert-danger" style="display: none;"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeAddCustomerModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Customer</button>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label" for="customerAddress">Address / Notes</label>
+                <textarea id="customerAddress" class="form-control" rows="3"></textarea>
+            </div>
+            
+            <div id="customerFormError" class="alert alert-danger" style="display: none; margin-bottom: 1rem;"></div>
+            
+            <div class="modal-footer flex-between">
+                <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btnSaveCustomer">Save Customer</button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Customer Details Modal -->
+<div id="customerDetailsModal" class="modal">
+    <div class="modal-content" style="max-width: 900px; padding: 0; background: var(--bg-main);">
+        <div class="modal-header" style="background: white; border-bottom: 1px solid var(--border-color); padding: 1.5rem;">
+            <div class="flex-between align-center" style="width: 100%;">
+                <div>
+                    <h2 id="detailsName" style="margin-bottom: 0.25rem;">Customer Name</h2>
+                    <div id="detailsJoined" style="color: var(--text-secondary); font-size: 0.875rem;">Joined: ...</div>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-primary" id="btnRecordSale" onclick="recordSaleForCustomer()"><i class="fa-solid fa-plus"></i> Record Sale</button>
+                    <button class="btn btn-secondary" onclick="closeCustomerDetailsModal()">&times; Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding: 1.5rem; display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+            
+            <!-- Left Column: Info & Insights -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <!-- Profile Card -->
+                <div class="card" style="padding: 1.5rem;">
+                    <h4 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Contact Info</h4>
+                    <div style="margin-bottom: 0.75rem;">
+                        <i class="fa-solid fa-phone" style="width: 20px; color: var(--text-secondary);"></i> <span id="detailsPhone"></span>
+                    </div>
+                    <div style="margin-bottom: 0.75rem;">
+                        <i class="fa-solid fa-envelope" style="width: 20px; color: var(--text-secondary);"></i> <span id="detailsEmail"></span>
+                    </div>
+                    <div>
+                        <i class="fa-solid fa-location-dot" style="width: 20px; color: var(--text-secondary);"></i> <span id="detailsAddress"></span>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                        <button class="btn btn-sm btn-secondary" style="width: 100%;" onclick="openEditFromDetails()"><i class="fa-solid fa-pen"></i> Edit Profile</button>
+                        <button class="btn btn-sm btn-danger-outline" style="width: 100%; margin-top: 0.5rem;" onclick="archiveCustomer()"><i class="fa-solid fa-box-archive"></i> Archive/Delete</button>
+                    </div>
+                </div>
+                
+                <!-- Insights Card -->
+                <div class="card" style="padding: 1.5rem; background: linear-gradient(135deg, var(--brand-blue), #2563eb); color: white;">
+                    <h4 style="margin-bottom: 1rem; opacity: 0.9;">Customer Insights</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <div style="font-size: 0.75rem; opacity: 0.8; text-transform: uppercase;">Total Spent</div>
+                            <div style="font-size: 1.25rem; font-weight: 600;" id="insightTotalSpent">...</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; opacity: 0.8; text-transform: uppercase;">Purchases</div>
+                            <div style="font-size: 1.25rem; font-weight: 600;" id="insightPurchaseCount">...</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; opacity: 0.8; text-transform: uppercase;">Avg Order</div>
+                            <div style="font-size: 1.25rem; font-weight: 600;" id="insightAvgOrder">...</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; opacity: 0.8; text-transform: uppercase;">Last Purchase</div>
+                            <div style="font-size: 0.875rem; font-weight: 500; margin-top: 0.25rem;" id="insightLastPurchase">...</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                        <div style="font-size: 0.75rem; opacity: 0.8; text-transform: uppercase;">Favorite Product</div>
+                        <div style="font-size: 1rem; font-weight: 500;" id="insightFavorite">...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Purchase History -->
+            <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column;">
+                <h4 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Purchase History</h4>
+                
+                <div style="flex: 1; overflow-y: auto;">
+                    <table class="data-table" style="font-size: 0.875rem;">
+                        <thead>
+                            <tr>
+                                <th>Sale ID</th>
+                                <th>Date</th>
+                                <th>Items</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerHistoryBody">
+                            <tr><td colspan="5" class="text-center"><i class="fa-solid fa-spinner fa-spin text-muted"></i></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="historyPagination" class="flex-between align-center" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem; display: none;">
+                    <button class="btn btn-sm btn-secondary" id="btnHistPrev">Previous</button>
+                    <span style="font-size: 0.875rem;" id="histPageInfo">Page 1</span>
+                    <button class="btn btn-sm btn-secondary" id="btnHistNext">Next</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='customers.js') }}?v=1"></script>
 {% endblock %}
