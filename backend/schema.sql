@@ -83,7 +83,10 @@ CREATE TABLE sales (
     business_id INTEGER NOT NULL,
     customer_id INTEGER,
     total_amount REAL NOT NULL DEFAULT 0.0,
+    discount REAL NOT NULL DEFAULT 0.0,
+    profit REAL NOT NULL DEFAULT 0.0,
     payment_method TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'Completed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses (id),
     FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE SET NULL
@@ -95,7 +98,9 @@ CREATE TABLE sale_items (
     product_id INTEGER NOT NULL,
     quantity INTEGER NOT NULL,
     unit_price REAL NOT NULL,
+    buying_price REAL NOT NULL DEFAULT 0.0,
     subtotal REAL NOT NULL,
+    profit REAL NOT NULL DEFAULT 0.0,
     FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products (id)
 );

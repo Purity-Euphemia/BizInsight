@@ -1,119 +1,308 @@
 {% extends "layout_dashboard.html" %}
-{% block title %}Sales POS - BizInsight{% endblock %}
+{% block title %}Sales - BizInsight{% endblock %}
 
 {% block content %}
-<div class="flex-between align-center" style="margin-bottom: 2rem;">
-    <div>
-        <h1 class="page-title">Point of Sale & Sales History</h1>
-        <p class="page-subtitle" style="margin-bottom: 0;">Process new transactions and view past sales.</p>
-    </div>
-    <button class="btn btn-primary" onclick="openNewSaleModal()">
-        <i class="fa-solid fa-cart-plus"></i> New Sale
-    </button>
-</div>
 
-<div class="card">
-    <div class="flex-between" style="margin-bottom: 1.5rem;">
-        <h3>Sales History</h3>
-    </div>
-    <div class="table-container">
-        <table class="data-table" id="salesTable">
-            <thead>
-                <tr>
-                    <th>Sale ID</th>
-                    <th>Date</th>
-                    <th>Customer</th>
-                    <th>Total Amount</th>
-                    <th>Payment Method</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="salesTableBody">
-                <tr><td colspan="6" class="text-center text-muted">Loading sales...</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- New Sale Modal (POS) -->
-<div id="newSaleModal" class="modal">
-    <div class="modal-content" style="max-width: 700px;">
-        <div class="modal-header">
-            <h2>Process New Sale</h2>
-            <span class="close" onclick="closeNewSaleModal()">&times;</span>
+<!-- SALES DASHBOARD VIEW -->
+<div id="salesDashboardView">
+    <div class="flex-between align-center" style="margin-bottom: 2rem;">
+        <div>
+            <h1 class="page-title">Sales</h1>
+            <p class="page-subtitle" style="margin-bottom: 0;">Track your sales, revenue, and transactions.</p>
         </div>
-        <div class="modal-body" style="padding: 0;">
-            <div style="display: flex; flex-direction: column; gap: 1.5rem; padding: 1.5rem;">
-                
-                <div class="form-group mb-0">
-                    <label class="form-label" for="posCustomer">Select Customer (Optional)</label>
-                    <select class="form-control" id="posCustomer">
-                        <option value="">Guest (Walk-in)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group mb-0">
-                    <label class="form-label" for="posProductSearch">Add Product to Cart</label>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <select class="form-control" id="posProductSelect">
-                            <option value="">Select a product...</option>
-                        </select>
-                        <input type="number" id="posQuantity" class="form-control" style="width: 80px;" min="1" value="1" placeholder="Qty">
-                        <button class="btn btn-secondary" onclick="addToCart()"><i class="fa-solid fa-plus"></i> Add</button>
-                    </div>
-                </div>
-                
-                <div class="table-container" style="box-shadow: none; border-color: #e2e8f0;">
-                    <table class="data-table">
-                        <thead style="background: #f8fafc;">
-                            <tr>
-                                <th>Item</th>
-                                <th>Price</th>
-                                <th>Qty</th>
-                                <th>Subtotal</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="cartBody">
-                            <!-- Cart items go here -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div style="display: flex; justify-content: flex-end;">
-                    <h3 style="margin: 0;">Total: <span id="cartTotal" style="color: var(--primary-blue);">₦0.00</span></h3>
-                </div>
-                
-                <div class="form-group mb-0">
-                    <label class="form-label" for="posPaymentMethod">Payment Method *</label>
-                    <select class="form-control" id="posPaymentMethod">
-                        <option value="Cash">Cash</option>
-                        <option value="Card">Credit/Debit Card</option>
-                        <option value="Transfer">Bank Transfer</option>
-                        <option value="Mobile Money">Mobile Money</option>
-                    </select>
-                </div>
-                
-                <div id="saleError" class="alert alert-danger" style="display: none;"></div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="toggleNewSaleView(true)"><i class="fa-solid fa-plus"></i> New Sale</button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="kpi-grid" style="margin-bottom: 2rem;">
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span>Today's Sales</span>
+                <div class="kpi-icon blue"><i class="fa-solid fa-calendar-day"></i></div>
+            </div>
+            <div class="kpi-value" id="kpiTodaySales">--</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span>This Week</span>
+                <div class="kpi-icon purple"><i class="fa-solid fa-calendar-week"></i></div>
+            </div>
+            <div class="kpi-value" id="kpiWeekSales">--</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span>This Month</span>
+                <div class="kpi-icon amber"><i class="fa-solid fa-calendar-days"></i></div>
+            </div>
+            <div class="kpi-value" id="kpiMonthSales">--</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span>Total Profit</span>
+                <div class="kpi-icon green"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            </div>
+            <div class="kpi-value" id="kpiTotalProfit">--</div>
+        </div>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="card">
+        <!-- Toolbar -->
+        <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="search-box" style="flex: 1; min-width: 200px;">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="salesSearch" placeholder="Search sales by ID or Customer..." class="form-control" oninput="debounceFetchSales()">
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <select id="salesDateRange" class="form-control" style="width: 150px;">
+                    <option value="">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+                <select id="salesPaymentMethod" class="form-control" style="width: 150px;">
+                    <option value="">All Payments</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Mobile Payment">Mobile Payment</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select id="salesStatus" class="form-control" style="width: 150px;">
+                    <option value="">All Statuses</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
             </div>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeNewSaleModal()">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="processSale()" id="processSaleBtn">Complete Sale</button>
+
+        <div class="table-container" style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Sale ID</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Amount</th>
+                        <th>Payment Method</th>
+                        <th>Profit</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="salesTableBody">
+                    <tr><td colspan="9" class="text-center" style="padding: 3rem;"><i class="fa-solid fa-spinner fa-spin fa-2x text-muted"></i></td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-container flex-between align-center" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+            <div id="paginationInfo" style="color: var(--text-secondary); font-size: 0.875rem;">Showing 0 to 0 of 0 entries</div>
+            <div id="paginationButtons" style="display: flex; gap: 0.5rem;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- NEW SALE (POS) VIEW -->
+<div id="newSaleView" style="display: none;">
+    <div class="flex-between align-center" style="margin-bottom: 2rem;">
+        <div>
+            <h1 class="page-title">New Sale</h1>
+            <p class="page-subtitle" style="margin-bottom: 0;">Record a new customer transaction.</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="toggleNewSaleView(false)"><i class="fa-solid fa-arrow-left"></i> Back to Sales</button>
+        </div>
+    </div>
+    
+    <div class="pos-layout" style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 1.5rem; align-items: start;">
+        
+        <!-- Left Column: Products -->
+        <div class="card" style="min-height: 500px; display: flex; flex-direction: column;">
+            <div class="search-box" style="margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="posProductSearch" placeholder="Search products..." class="form-control" oninput="debouncePOSSearch()">
+            </div>
+            
+            <div id="posProductsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; flex: 1; align-content: start; max-height: 600px; overflow-y: auto;">
+                <!-- Products populate here -->
+            </div>
+        </div>
+        
+        <!-- Right Column: Cart & Checkout -->
+        <div class="card" style="position: sticky; top: 1rem;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">Current Sale</h3>
+            
+            <!-- Cart Items -->
+            <div id="cartItems" style="min-height: 200px; max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                <div class="text-center" style="padding: 2rem; color: var(--text-secondary);">
+                    <i class="fa-solid fa-cart-shopping" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    <p style="font-size: 0.875rem;">No items added yet</p>
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label">Customer</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select id="saleCustomer" class="form-control" style="flex: 1;">
+                        <option value="">Walk-in Customer</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label">Payment Method *</label>
+                <select id="salePaymentMethod" class="form-control" required>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Mobile Payment">Mobile Payment</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <!-- Summary -->
+            <div style="background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+                <div class="flex-between" style="margin-bottom: 0.5rem; font-size: 0.875rem;">
+                    <span style="color: var(--text-secondary);">Subtotal</span>
+                    <span id="saleSubtotal" style="font-weight: 500;">₦0.00</span>
+                </div>
+                <div class="flex-between align-center" style="margin-bottom: 0.5rem; font-size: 0.875rem;">
+                    <span style="color: var(--text-secondary);">Discount</span>
+                    <div style="width: 100px;">
+                        <input type="number" id="saleDiscount" class="form-control" value="0" min="0" style="padding: 0.25rem 0.5rem; height: auto;" oninput="updateCartTotals()">
+                    </div>
+                </div>
+                <div style="height: 1px; background: var(--border-color); margin: 0.75rem 0;"></div>
+                <div class="flex-between" style="font-size: 1.25rem; font-weight: 600;">
+                    <span>Total</span>
+                    <span id="saleTotal" style="color: var(--brand-blue);">₦0.00</span>
+                </div>
+            </div>
+            
+            <div id="checkoutError" class="alert alert-danger" style="display: none; margin-bottom: 1rem;"></div>
+            
+            <button class="btn btn-primary" style="width: 100%; padding: 0.875rem; font-size: 1rem;" id="btnCompleteSale" onclick="completeSale()" disabled>Complete Sale</button>
         </div>
     </div>
 </div>
 
 <!-- Sale Details Modal -->
 <div id="saleDetailsModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
-            <h2>Sale Receipt</h2>
-            <span class="close" onclick="closeSaleDetailsModal()">&times;</span>
+            <div>
+                <h2 style="margin-bottom: 0.25rem;">Sale Details</h2>
+                <div id="detailsSaleId" style="color: var(--text-secondary); font-size: 0.875rem;">Loading...</div>
+            </div>
+            <span class="modal-close" onclick="closeSaleDetailsModal()">&times;</span>
         </div>
-        <div class="modal-body" id="saleDetailsBody">
-            Loading details...
+        
+        <div id="saleDetailsContent">
+            <div class="text-center"><i class="fa-solid fa-spinner fa-spin fa-2x text-muted"></i></div>
+        </div>
+        
+        <div class="modal-footer flex-between">
+            <button class="btn btn-danger-outline" id="btnCancelSale" onclick="cancelSale()" style="display: none;">Cancel Sale</button>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-secondary" onclick="printReceipt()"><i class="fa-solid fa-print"></i> Print Receipt</button>
+                <button class="btn btn-secondary" onclick="closeSaleDetailsModal()">Close</button>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Hidden Receipt Container for Printing -->
+<div id="printReceiptContainer" style="display: none;">
+    <!-- Populated by JS for printing -->
+</div>
+
+<style>
+/* Print Styles */
+@media print {
+    body * { visibility: hidden; }
+    #printReceiptContainer, #printReceiptContainer * { visibility: visible; }
+    #printReceiptContainer {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+        font-family: monospace;
+    }
+    .modal { display: none !important; }
+}
+
+/* POS specific styles */
+.pos-product-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    user-select: none;
+}
+.pos-product-card:hover {
+    border-color: var(--brand-blue);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+}
+.pos-product-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-main);
+}
+.pos-product-card.disabled:hover {
+    transform: none;
+    border-color: var(--border-color);
+    box-shadow: none;
+}
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed var(--border-color);
+}
+.cart-item:last-child {
+    border-bottom: none;
+}
+.qty-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-main);
+    padding: 0.25rem;
+    border-radius: var(--radius-sm);
+}
+.qty-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+.qty-btn:hover { background: var(--bg-hover); }
+
+/* Responsive Grid for POS layout */
+@media (max-width: 900px) {
+    .pos-layout {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='sales.js') }}?v=2"></script>
 {% endblock %}
