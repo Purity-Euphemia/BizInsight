@@ -197,14 +197,15 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-sp
 .sidebar-header i { color: var(--brand-blue); font-size: 1.5rem; }
 .sidebar-nav { flex: 1; overflow-y: auto; padding: 1rem 0.75rem; }
 .sidebar-nav a {
-    display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+    display: flex; align-items: center; gap: 1.25rem; padding: 0.875rem 1.5rem;
     color: #94A3B8; font-size: 0.875rem; font-weight: 500; border-radius: var(--radius-sm);
     margin-bottom: 0.25rem; transition: all 0.2s;
 }
-.sidebar-nav a i { font-size: 1.1rem; width: 20px; text-align: center; }
+.sidebar-nav a i { font-size: 1.1rem; }
 .sidebar-nav a:hover { color: white; background-color: rgba(255,255,255,0.05); }
 .sidebar-nav a.active { color: white; background-color: var(--brand-blue); font-weight: 600; }
-.sidebar-footer { padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+.sidebar-footer { padding: 1rem 0; border-top: 1px solid rgba(255,255,255,0.1); }
+.sidebar-footer .sidebar-nav { flex: none; overflow-y: visible; padding: 0; }
 .sidebar-profile { display: flex; align-items: center; gap: 0.75rem; cursor: pointer; }
 .sidebar-profile .avatar { width: 32px; height: 32px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: white;}
 .sidebar-profile .info { display: flex; flex-direction: column; }

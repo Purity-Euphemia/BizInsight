@@ -22,41 +22,41 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <i class="fa-solid fa-chart-pie"></i> BizInsight
+                <i class="fa-solid fa-cube"></i> BizInsight
             </div>
             
             <nav class="sidebar-nav">
                 <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-                    <i class="fa-solid fa-house"></i> Dashboard
+                    <i class="fa-solid fa-house fa-fw"></i> Dashboard
                 </a>
                 <a href="{{ url_for('main.sales') }}" class="{% if request.endpoint == 'main.sales' %}active{% endif %}">
-                    <i class="fa-solid fa-cart-shopping"></i> Sales
+                    <i class="fa-solid fa-right-left fa-fw"></i> Sales
                 </a>
                 <a href="{{ url_for('main.products') }}" class="{% if request.endpoint == 'main.products' %}active{% endif %}">
-                    <i class="fa-solid fa-box"></i> Products
+                    <i class="fa-solid fa-cube fa-fw"></i> Products
                 </a>
                 <a href="{{ url_for('main.inventory') }}" class="{% if request.endpoint == 'main.inventory' %}active{% endif %}">
-                    <i class="fa-solid fa-cubes"></i> Inventory
+                    <i class="fa-solid fa-clipboard-list fa-fw"></i> Inventory
                 </a>
                 <a href="{{ url_for('main.customers') }}" class="{% if request.endpoint == 'main.customers' %}active{% endif %}">
-                    <i class="fa-solid fa-users"></i> Customers
+                    <i class="fa-solid fa-user-group fa-fw"></i> Customers
                 </a>
                 <a href="{{ url_for('main.expenses') }}" class="{% if request.endpoint == 'main.expenses' %}active{% endif %}">
-                    <i class="fa-solid fa-receipt"></i> Expenses
+                    <i class="fa-solid fa-file-arrow-down fa-fw"></i> Expenses
                 </a>
                 <a href="{{ url_for('main.analytics') }}" class="{% if request.endpoint == 'main.analytics' %}active{% endif %}">
-                    <i class="fa-solid fa-chart-line"></i> Analytics
+                    <i class="fa-solid fa-chart-line fa-fw"></i> Analytics
                 </a>
                 <a href="{{ url_for('main.reports') }}" class="{% if request.endpoint == 'main.reports' %}active{% endif %}">
-                    <i class="fa-solid fa-file-export"></i> Reports
+                    <i class="fa-solid fa-file-export fa-fw"></i> Reports
                 </a>
             </nav>
             
             <div class="sidebar-footer">
-                <nav class="sidebar-nav" style="padding: 0 0.75rem;">
-                    <a href="#" style="margin-bottom: 0.5rem;"><i class="fa-solid fa-gear"></i> Settings</a>
-                    <a href="#" style="margin-bottom: 0.5rem;"><i class="fa-regular fa-user"></i> Profile</a>
-                    <a href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
+                <nav class="sidebar-nav">
+                    <a href="#" style="margin-bottom: 0.5rem;"><i class="fa-solid fa-gear fa-fw"></i> Settings</a>
+                    <a href="#" style="margin-bottom: 0.5rem;"><i class="fa-regular fa-user fa-fw"></i> Profile</a>
+                    <a href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-arrow-right-from-bracket fa-fw"></i> Log Out</a>
                 </nav>
             </div>
         </aside>
