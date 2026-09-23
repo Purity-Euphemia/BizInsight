@@ -33,6 +33,7 @@ async function fetchProducts() {
             let statusHtml = `<span class="badge badge-success">In Stock</span>`;
             if (p.quantity === 0) {
                 statusHtml = `<span class="badge badge-error">Out of Stock</span>`;
+            }
             tr.innerHTML = `
                 <td>${escapeHtml(p.name)}</td>
                 <td><span class="badge badge-neutral">${escapeHtml(p.category || '-')}</span></td>
@@ -957,10 +958,11 @@ let dashboardChartInstance = null;
 
 async function fetchDashboardChart(days) {
     try {
-        const response = await fetch(\`/dashboard/api/sales_trend?days=\${days}\`);
+        const response = await fetch(`/dashboard/api/sales_trend?days=${days}`);
         const data = await response.json();
         
         const ctx = document.getElementById('salesOverviewChart');
+        const emptyState = document.getElementById('salesChartEmptyState');
         if (!ctx) return;
         
         if (dashboardChartInstance) {
@@ -968,10 +970,13 @@ async function fetchDashboardChart(days) {
         }
         
         if (data.labels.length === 0) {
-            // Show empty state inside canvas container manually or just empty chart
-            ctx.parentNode.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color: var(--text-secondary);"><i class="fa-solid fa-chart-line" style="font-size:2rem; margin-bottom:1rem; opacity:0.5;"></i><p>No sales data yet.</p></div>';
+            ctx.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'flex';
             return;
         }
+        
+        ctx.style.display = 'block';
+        if (emptyState) emptyState.style.display = 'none';
         
         dashboardChartInstance = new Chart(ctx, {
             type: 'line',

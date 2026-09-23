@@ -84,6 +84,12 @@
             </div>
             <div style="height: 300px; position: relative;">
                 <canvas id="salesOverviewChart"></canvas>
+                <div id="salesChartEmptyState" style="display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-white); flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 10;">
+                    <i class="fa-solid fa-chart-line" style="font-size:3rem; margin-bottom:1rem; color: var(--border-color);"></i>
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.125rem;">No sales data yet</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem; max-width: 300px;">Record your first sale to start seeing your sales trends.</p>
+                    <a href="/sales" class="btn btn-primary">Record Sale</a>
+                </div>
             </div>
         </div>
 
