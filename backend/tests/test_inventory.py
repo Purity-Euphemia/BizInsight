@@ -26,18 +26,28 @@ def auth_client(client, app):
     client.post('/auth/login', data={'username': 'user1', 'password': 'pass'})
     return client, b_id, p_id
 
-def test_get_inventory_status(auth_client):
+def test_get_inventory(auth_client):
     client, b_id, p_id = auth_client
     
-    res = client.get('/inventory/api/status')
+    res = client.get('/inventory/api')
     assert res.status_code == 200
     
     data = res.json
-    assert data['summary']['total_products'] == 1
-    assert len(data['items']) == 1
-    assert data['items'][0]['name'] == 'Test Item'
-    assert data['items'][0]['quantity'] == 10
-    assert data['items'][0]['status'] == 'In Stock'
+    assert data['total'] == 1
+    assert len(data['products']) == 1
+    assert data['products'][0]['name'] == 'Test Item'
+    assert data['products'][0]['quantity'] == 10
+
+def test_get_inventory_metrics(auth_client):
+    client, b_id, p_id = auth_client
+    
+    res = client.get('/inventory/api/metrics')
+    assert res.status_code == 200
+    
+    data = res.json
+    assert data['total_products'] == 1
+    assert data['low_stock'] == 0
+    assert data['out_of_stock'] == 0
 
 def test_adjust_stock_in(auth_client, app):
     client, b_id, p_id = auth_client
@@ -60,6 +70,8 @@ def test_adjust_stock_in(auth_client, app):
         tx = db.execute("SELECT * FROM inventory_transactions WHERE product_id = ?", (p_id,)).fetchone()
         assert tx['transaction_type'] == 'IN'
         assert tx['quantity'] == 5
+        assert tx['previous_stock'] == 10
+        assert tx['new_stock'] == 15
         assert tx['reference'] == 'Restock'
 
 def test_adjust_stock_out(auth_client, app):

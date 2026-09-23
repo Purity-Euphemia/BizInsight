@@ -85,9 +85,9 @@ def checkout():
             
             # 3. Log in inventory_transactions
             db.execute(
-                """INSERT INTO inventory_transactions (business_id, product_id, transaction_type, quantity, reference)
-                   VALUES (?, ?, 'OUT', ?, ?)""",
-                (business_id, p_item['product_id'], p_item['quantity'], f"Sale #{sale_id}")
+                """INSERT INTO inventory_transactions (business_id, product_id, transaction_type, quantity, previous_stock, new_stock, user_id, reference)
+                   VALUES (?, ?, 'OUT', ?, ?, ?, ?, ?)""",
+                (business_id, p_item['product_id'], p_item['quantity'], p_item['current_stock'], new_stock, g.user['id'], f"Sale #{sale_id}")
             )
             
         db.commit()

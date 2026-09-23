@@ -4,79 +4,206 @@
 {% block content %}
 <div class="flex-between align-center" style="margin-bottom: 2rem;">
     <div>
-        <h1 class="page-title">Inventory Dashboard</h1>
-        <p class="page-subtitle" style="margin-bottom: 0;">Track stock levels and stock-in new inventory.</p>
+        <h1 class="page-title">Inventory</h1>
+        <p class="page-subtitle" style="margin-bottom: 0;">Monitor your stock levels and keep your products available.</p>
+    </div>
+    <div class="header-actions">
+        <!-- Add Stock button opens the adjust stock modal for generic additions -->
+        <button class="btn btn-primary" onclick="openAdjustStockModal()"><i class="fa-solid fa-plus"></i> Add Stock</button>
     </div>
 </div>
 
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div class="kpi-header">
-            <span>Total Value</span>
-            <div class="kpi-icon blue"><i class="fa-solid fa-boxes-stacked"></i></div>
-        </div>
-        <div class="kpi-value" id="invTotalValue">Loading...</div>
-    </div>
+<div class="kpi-grid" style="margin-bottom: 2rem;">
     <div class="kpi-card">
         <div class="kpi-header">
             <span>Total Products</span>
-            <div class="kpi-icon purple"><i class="fa-solid fa-list"></i></div>
+            <div class="kpi-icon purple"><i class="fa-solid fa-boxes-stacked"></i></div>
         </div>
-        <div class="kpi-value" id="invTotalProducts">Loading...</div>
+        <div class="kpi-value" id="kpiTotalProducts">--</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-header">
-            <span>Low Stock Items</span>
+            <span>Low Stock</span>
             <div class="kpi-icon amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
         </div>
-        <div class="kpi-value" id="invLowStock">Loading...</div>
+        <div class="kpi-value" id="kpiLowStock">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Out of Stock</span>
+            <div class="kpi-icon red"><i class="fa-solid fa-circle-xmark"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiOutOfStock">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Inventory Value</span>
+            <div class="kpi-icon blue"><i class="fa-solid fa-wallet"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiInventoryValue">--</div>
+    </div>
+</div>
+
+<!-- Stock Overview Summary Section (Visual Overview) -->
+<div class="card" style="margin-bottom: 2rem; display: none;" id="stockOverviewSection">
+    <h3 style="margin-bottom: 1rem;">Stock Overview</h3>
+    <div style="display: flex; height: 1.5rem; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 1rem;">
+        <div id="barHealthy" style="background: var(--status-success); width: 0%; transition: width 0.3s;"></div>
+        <div id="barLow" style="background: var(--status-warning); width: 0%; transition: width 0.3s;"></div>
+        <div id="barOut" style="background: var(--status-danger); width: 0%; transition: width 0.3s;"></div>
+    </div>
+    <div style="display: flex; gap: 2rem; font-size: 0.875rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--status-success);"></div>
+            <span id="labelHealthy">Healthy (0%)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--status-warning);"></div>
+            <span id="labelLow">Low Stock (0%)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--status-danger);"></div>
+            <span id="labelOut">Out of Stock (0%)</span>
+        </div>
     </div>
 </div>
 
 <div class="card">
-    <div class="flex-between" style="margin-bottom: 1.5rem;">
-        <h3>Current Stock Levels</h3>
+    <!-- Toolbar -->
+    <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="search-box" style="flex: 1; min-width: 200px;">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" id="inventorySearch" placeholder="Search inventory..." class="form-control" oninput="debounceFetchInventory()">
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <select id="inventoryCategory" class="form-control" style="width: 150px;">
+                <option value="">All Categories</option>
+            </select>
+            <select id="inventoryStockStatus" class="form-control" style="width: 150px;">
+                <option value="">All Statuses</option>
+                <option value="healthy">Healthy</option>
+                <option value="low">Low Stock</option>
+                <option value="out">Out of Stock</option>
+            </select>
+            <select id="inventorySort" class="form-control" style="width: 170px;">
+                <option value="name_asc">Sort: Product Name</option>
+                <option value="stock_low">Sort: Stock Low to High</option>
+                <option value="stock_high">Sort: Stock High to Low</option>
+                <option value="value_high">Sort: Inventory Value</option>
+                <option value="recent">Sort: Recently Updated</option>
+            </select>
+        </div>
     </div>
-    <div class="table-container">
-        <table class="data-table" id="inventoryTable">
+
+    <!-- Table -->
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="data-table">
             <thead>
                 <tr>
-                    <th>Product Name</th>
+                    <th>Product</th>
                     <th>Category</th>
+                    <th>Buying Price</th>
+                    <th>Selling Price</th>
                     <th>Current Stock</th>
+                    <th>Limit</th>
+                    <th>Inventory Value</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th>Last Updated</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody id="inventoryTableBody">
-                <tr><td colspan="5" class="text-center text-muted">Loading inventory...</td></tr>
+                <!-- Skeleton Loader -->
+                <tr><td colspan="10" class="text-center" style="padding: 3rem;"><i class="fa-solid fa-spinner fa-spin fa-2x text-muted"></i></td></tr>
             </tbody>
         </table>
     </div>
+    
+    <!-- Pagination -->
+    <div class="pagination-container flex-between align-center" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <div id="paginationInfo" style="color: var(--text-secondary); font-size: 0.875rem;">Showing 0 to 0 of 0 entries</div>
+        <div id="paginationButtons" style="display: flex; gap: 0.5rem;"></div>
+    </div>
 </div>
 
-<!-- Stock In Modal -->
-<div id="stockInModal" class="modal">
+<!-- Add/Adjust Stock Modal -->
+<div id="adjustStockModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Add Stock</h2>
-            <span class="close" onclick="closeStockInModal()">&times;</span>
+            <h2 id="adjustModalTitle">Add Stock</h2>
+            <span class="modal-close" onclick="closeAdjustStockModal()">&times;</span>
         </div>
-        <form id="stockInForm">
-            <input type="hidden" id="stockInProductId">
-            <p style="margin-bottom: 1rem; color: var(--text-muted);">
-                Adding stock for: <strong id="stockInProductName" style="color: var(--text-dark);"></strong>
-            </p>
+        <form id="adjustStockForm" onsubmit="saveStockAdjustment(event)">
+            <div id="adjustStockError" class="alert alert-danger" style="display: none; margin-bottom: 1rem;"></div>
+            
             <div class="form-group">
-                <label class="form-label" for="stockInQuantity">Quantity to Add *</label>
-                <input class="form-control" type="number" min="1" id="stockInQuantity" required>
+                <label class="form-label" for="adjustProductSelect">Product *</label>
+                <select class="form-control" id="adjustProductSelect" required onchange="onAdjustProductChange()">
+                    <option value="">Select a product...</option>
+                </select>
             </div>
-            <div id="stockInError" class="alert alert-danger" style="display: none;"></div>
+            
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="adjustType">Transaction Type *</label>
+                    <select class="form-control" id="adjustType" required onchange="calculateNewStockPreview()">
+                        <option value="IN">Add Stock (In)</option>
+                        <option value="OUT">Remove Stock (Out)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="adjustQuantity">Quantity *</label>
+                    <input class="form-control" type="number" id="adjustQuantity" min="1" required oninput="calculateNewStockPreview()">
+                </div>
+            </div>
+            
+            <div style="background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Current Stock</div>
+                    <div id="adjustCurrentStock" style="font-size: 1.25rem; font-weight: 500;">--</div>
+                </div>
+                <div style="color: var(--border-color); font-size: 1.5rem;"><i class="fa-solid fa-arrow-right"></i></div>
+                <div style="text-align: right;">
+                    <div style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">New Stock</div>
+                    <div id="adjustNewStock" style="font-size: 1.25rem; font-weight: 600; color: var(--brand-blue);">--</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="adjustReference">Reason / Reference (Optional)</label>
+                <input class="form-control" type="text" id="adjustReference" placeholder="e.g. New supplier shipment, Damaged goods">
+            </div>
+            
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeStockInModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Add Stock</button>
+                <button type="button" class="btn btn-secondary" onclick="closeAdjustStockModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveAdjustmentBtn">Confirm</button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Stock History Modal -->
+<div id="stockHistoryModal" class="modal">
+    <div class="modal-content" style="max-width: 650px;">
+        <div class="modal-header">
+            <div>
+                <h2 style="margin-bottom: 0.25rem;">Stock History</h2>
+                <div id="historyProductName" style="color: var(--text-secondary); font-size: 0.875rem;">Loading...</div>
+            </div>
+            <span class="modal-close" onclick="closeStockHistoryModal()">&times;</span>
+        </div>
+        
+        <div id="stockHistoryContent" style="max-height: 400px; overflow-y: auto;">
+            <div class="text-center"><i class="fa-solid fa-spinner fa-spin fa-2x text-muted"></i></div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeStockHistoryModal()">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='inventory.js') }}"></script>
 {% endblock %}

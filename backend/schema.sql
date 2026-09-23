@@ -68,10 +68,14 @@ CREATE TABLE inventory_transactions (
     product_id INTEGER NOT NULL,
     transaction_type TEXT NOT NULL, -- 'IN' or 'OUT'
     quantity INTEGER NOT NULL,
+    previous_stock INTEGER NOT NULL DEFAULT 0,
+    new_stock INTEGER NOT NULL DEFAULT 0,
+    user_id INTEGER,
     reference TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses (id),
-    FOREIGN KEY (product_id) REFERENCES products (id)
+    FOREIGN KEY (product_id) REFERENCES products (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 CREATE TABLE sales (
