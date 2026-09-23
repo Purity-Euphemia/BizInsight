@@ -56,6 +56,7 @@ CREATE TABLE products (
     selling_price REAL NOT NULL DEFAULT 0.0,
     quantity INTEGER NOT NULL DEFAULT 0,
     low_stock_limit INTEGER NOT NULL DEFAULT 0,
+    is_active BOOLEAN DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses (id)

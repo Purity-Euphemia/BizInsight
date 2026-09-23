@@ -87,15 +87,15 @@ def test_get_products(auth_client, other_auth_client):
     
     # Get products for user 1
     res1 = client1.get('/products/api')
-    products1 = res1.json
+    products1 = res1.json['products']
     assert len(products1) == 1
     assert products1[0]['name'] == 'User 1 Product'
     
     # Search functionality
     client1.post('/products/api', json={'name': 'Apple', 'category': 'Fruit'})
     res_search = client1.get('/products/api?search=Apple')
-    assert len(res_search.json) == 1
-    assert res_search.json[0]['name'] == 'Apple'
+    assert len(res_search.json['products']) == 1
+    assert res_search.json['products'][0]['name'] == 'Apple'
 
 def test_update_product(auth_client, app):
     client, b_id = auth_client
@@ -142,5 +142,6 @@ def test_delete_product(auth_client, app):
     assert res.status_code == 200
     
     with app.app_context():
-        p = get_db().execute("SELECT id FROM products WHERE id = ?", (p_id,)).fetchone()
-        assert p is None
+        p = get_db().execute("SELECT is_active FROM products WHERE id = ?", (p_id,)).fetchone()
+        assert p is not None
+        assert p['is_active'] == 0

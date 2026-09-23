@@ -343,3 +343,17 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-sp
     .topbar-search { display: none; }
     .kpi-grid { grid-template-columns: 1fr; }
 }
+
+/* Dropdown Menu */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-menu { 
+    display: none; position: absolute; right: 0; top: 100%;
+    background: white; border: 1px solid var(--border-color); 
+    border-radius: var(--radius-sm); box-shadow: var(--shadow-dropdown); 
+    z-index: 1000; min-width: 140px; padding: 0.5rem 0;
+}
+.dropdown-menu a {
+    display: block; padding: 0.5rem 1rem; color: var(--text-primary); text-decoration: none;
+    font-size: 0.875rem; transition: background 0.1s;
+}
+.dropdown-menu a:hover { background: var(--bg-main); }
