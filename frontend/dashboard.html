@@ -1,107 +1,228 @@
 {% extends "layout_dashboard.html" %}
-{% block title %}Overview - BizInsight{% endblock %}
+{% block title %}Dashboard - BizInsight{% endblock %}
 
 {% block content %}
-<div class="flex-between align-center mb-4">
+<div class="page-header">
     <div>
-        <h1 class="page-title">Good morning, {{ g.user['username'] }}</h1>
-        <p class="page-subtitle">Here's what's happening with your business today.</p>
+        <h1 class="page-title">Good morning, {{ g.user['username'] }} 👋</h1>
+        <p class="page-desc">Here's what's happening with your business today.</p>
+    </div>
+    <div class="date-selector">
+        <i class="fa-regular fa-calendar"></i>
+        <span id="dashboardDate">Today</span>
+        <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; margin-left: 0.5rem; color: var(--text-tertiary);"></i>
     </div>
 </div>
 
 <div class="kpi-grid">
     <div class="kpi-card">
         <div class="kpi-header">
-            <span>Total Revenue (30d)</span>
-            <div class="kpi-icon blue"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+            <div class="kpi-icon icon-blue"><i class="fa-solid fa-sack-dollar"></i></div>
+            <span>Today's Sales</span>
         </div>
-        <div class="kpi-value" id="metric-revenue">Loading...</div>
+        <div class="kpi-value" id="kpi-today-sales">₦0</div>
+        <div class="kpi-trend" id="kpi-today-trend">
+            <i class="fa-solid fa-arrow-up trend-up"></i>
+            <span class="trend-up">0%</span>
+            <span class="trend-text">from yesterday</span>
+        </div>
     </div>
     
     <div class="kpi-card">
         <div class="kpi-header">
-            <span>Gross Profit (30d)</span>
-            <div class="kpi-icon purple"><i class="fa-solid fa-chart-simple"></i></div>
+            <div class="kpi-icon icon-blue"><i class="fa-regular fa-calendar-days"></i></div>
+            <span>Weekly Sales</span>
         </div>
-        <div class="kpi-value" id="metric-gross-profit">Loading...</div>
+        <div class="kpi-value" id="kpi-weekly-sales">₦0</div>
+        <div class="kpi-trend" id="kpi-weekly-trend">
+            <i class="fa-solid fa-arrow-up trend-up"></i>
+            <span class="trend-up">0%</span>
+            <span class="trend-text">from last week</span>
+        </div>
     </div>
     
     <div class="kpi-card">
         <div class="kpi-header">
-            <span>Total Expenses (30d)</span>
-            <div class="kpi-icon amber"><i class="fa-solid fa-receipt"></i></div>
+            <div class="kpi-icon icon-blue"><i class="fa-solid fa-chart-line"></i></div>
+            <span>Monthly Revenue</span>
         </div>
-        <div class="kpi-value text-danger" id="metric-expenses">Loading...</div>
+        <div class="kpi-value" id="kpi-monthly-revenue">₦0</div>
+        <div class="kpi-trend" id="kpi-monthly-trend">
+            <i class="fa-solid fa-arrow-up trend-up"></i>
+            <span class="trend-up">0%</span>
+            <span class="trend-text">from last month</span>
+        </div>
     </div>
     
     <div class="kpi-card">
         <div class="kpi-header">
-            <span>Net Profit (30d)</span>
-            <div class="kpi-icon green"><i class="fa-solid fa-wallet"></i></div>
+            <div class="kpi-icon icon-green"><i class="fa-solid fa-wallet"></i></div>
+            <span>Net Profit</span>
         </div>
-        <div class="kpi-value" id="metric-net-profit">Loading...</div>
+        <div class="kpi-value" id="kpi-net-profit">₦0</div>
+        <div class="kpi-trend" id="kpi-profit-trend">
+            <i class="fa-solid fa-arrow-up trend-up"></i>
+            <span class="trend-up">0%</span>
+            <span class="trend-text">from last month</span>
+        </div>
     </div>
 </div>
 
-<!-- Main Content Grid -->
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-    
+<div class="dash-grid">
     <!-- Left Column -->
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <div class="dash-col">
+        <!-- Sales Overview Chart -->
         <div class="card">
-            <h3 style="margin-bottom: 1.5rem;">Sales Overview (30 Days)</h3>
-            <canvas id="salesTrendChart" style="max-height: 300px;"></canvas>
+            <div class="card-header">
+                <h3>Sales Overview</h3>
+                <div class="card-actions" id="chartRangeControls">
+                    <button class="range-btn active" data-days="7">7 Days</button>
+                    <button class="range-btn" data-days="30">30 Days</button>
+                    <button class="range-btn" data-days="90">3 Months</button>
+                    <button class="range-btn" data-days="365">1 Year</button>
+                </div>
+            </div>
+            <div style="height: 300px; position: relative;">
+                <canvas id="salesOverviewChart"></canvas>
+            </div>
         </div>
-        
+
+        <!-- Recent Transactions -->
         <div class="card">
-            <div class="flex-between" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
                 <h3>Recent Transactions</h3>
-                <a href="{{ url_for('main.sales') }}" class="btn btn-secondary btn-sm">View All</a>
+                <a href="{{ url_for('main.sales') }}" class="btn-text">View all</a>
             </div>
             <div class="table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Product</th>
                             <th>Amount</th>
-                            <th>Method</th>
+                            <th>Payment Method</th>
+                            <th>Date</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="recentTransactionsBody">
-                        <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted" style="padding: 2rem;">Loading transactions...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-    
+
     <!-- Right Column -->
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <div class="dash-col">
+        <!-- Best Selling Products -->
         <div class="card">
-            <h3 style="margin-bottom: 1.5rem;">Top Selling Products</h3>
+            <div class="card-header">
+                <h3>Best Selling Products</h3>
+                <a href="{{ url_for('main.products') }}" class="btn-text">View all</a>
+            </div>
             <div class="table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Product</th>
-                            <th style="text-align: right;">Units Sold</th>
+                            <th>Units Sold</th>
+                            <th>Revenue</th>
                         </tr>
                     </thead>
                     <tbody id="topProductsBody">
-                        <tr><td colspan="2" class="text-center text-muted">Loading...</td></tr>
+                        <tr><td colspan="3" class="text-center text-muted" style="padding: 2rem;">Loading products...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
-        
-        <div class="card" style="border-top: 4px solid var(--warning);">
-            <h3 style="margin-bottom: 1.5rem;">Low Stock Alerts</h3>
-            <div id="lowStockAlertsList">
-                <div class="text-center text-muted">Loading...</div>
+
+        <!-- Low Stock Alerts -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Low Stock</h3>
+                <a href="{{ url_for('main.inventory') }}" class="btn-text">View all</a>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Current Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lowStockBody">
+                        <tr><td colspan="3" class="text-center text-muted" style="padding: 2rem;">Loading inventory...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Business Insight Card -->
+        <div class="insight-card" id="insightCard">
+            <div class="icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            <h3>Loading insights...</h3>
+            <p>Analyzing your business data.</p>
+            <a href="{{ url_for('main.analytics') }}" class="btn btn-primary btn-sm">View Analytics &rarr;</a>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">Quick Actions</h3>
+            <div>
+                <a href="{{ url_for('main.products') }}" class="quick-action-item">
+                    <div class="qa-icon"><i class="fa-solid fa-box-open"></i></div>
+                    <div class="qa-content">
+                        <h4>Add Product</h4>
+                        <p>Create a new product</p>
+                    </div>
+                    <div class="qa-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                </a>
+                <a href="{{ url_for('main.sales') }}" class="quick-action-item">
+                    <div class="qa-icon"><i class="fa-solid fa-cart-plus"></i></div>
+                    <div class="qa-content">
+                        <h4>Record Sale</h4>
+                        <p>Log a new customer sale</p>
+                    </div>
+                    <div class="qa-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                </a>
+                <a href="{{ url_for('main.expenses') }}" class="quick-action-item">
+                    <div class="qa-icon"><i class="fa-solid fa-receipt"></i></div>
+                    <div class="qa-content">
+                        <h4>Add Expense</h4>
+                        <p>Track business expenses</p>
+                    </div>
+                    <div class="qa-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                </a>
+                <a href="{{ url_for('main.reports') }}" class="quick-action-item">
+                    <div class="qa-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                    <div class="qa-content">
+                        <h4>View Reports</h4>
+                        <p>Generate business reports</p>
+                    </div>
+                    <div class="qa-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                </a>
             </div>
         </div>
     </div>
-    
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Fetch metrics on load
+        if (typeof fetchDashboardMetrics === 'function') {
+            fetchDashboardMetrics();
+        }
+        if (typeof initDashboardChart === 'function') {
+            initDashboardChart();
+        }
+        
+        // Update top date
+        const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+        document.getElementById('dashboardDate').textContent = 'Today, ' + new Date().toLocaleDateString('en-US', options);
+    });
+</script>
 {% endblock %}

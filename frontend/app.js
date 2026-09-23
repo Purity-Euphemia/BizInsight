@@ -825,62 +825,229 @@ async function fetchDashboardMetrics() {
         const response = await fetch('/dashboard/api/metrics');
         const data = await response.json();
         
-        if (!response.ok) throw new Error(data.error);
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch metrics');
         
-        const m = data.metrics;
+        const kpi = data.kpi;
         
-        document.getElementById('metric-revenue').textContent = `₦${m.revenue.toFixed(2)}`;
-        document.getElementById('metric-gross-profit').textContent = `₦${m.gross_profit.toFixed(2)}`;
-        document.getElementById('metric-expenses').textContent = `-₦${m.expenses.toFixed(2)}`;
-        
-        const npEl = document.getElementById('metric-net-profit');
-        npEl.textContent = `₦${m.net_profit.toFixed(2)}`;
-        if (m.net_profit < 0) {
-            npEl.classList.add('text-error');
-        } else {
-            npEl.classList.remove('text-error');
-            if (m.net_profit > 0) npEl.style.color = 'var(--success-color, #10b981)';
+        // Helper for trends
+        const updateTrend = (id, val, text) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const isUp = val >= 0;
+            const cls = isUp ? 'trend-up' : 'trend-down';
+            const icon = isUp ? 'fa-arrow-up' : 'fa-arrow-down';
+            el.innerHTML = `<i class="fa-solid ${icon} ${cls}"></i> <span class="${cls}">${Math.abs(val).toFixed(1)}%</span> <span class="trend-text">${text}</span>`;
+        };
+
+        // Populate KPIs
+        if (document.getElementById('kpi-today-sales')) {
+            document.getElementById('kpi-today-sales').textContent = `₦${(kpi.today_sales || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            updateTrend('kpi-today-trend', kpi.today_trend, 'from yesterday');
+            
+            document.getElementById('kpi-weekly-sales').textContent = `₦${(kpi.weekly_sales || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            updateTrend('kpi-weekly-trend', kpi.weekly_trend, 'from last week');
+            
+            document.getElementById('kpi-monthly-revenue').textContent = `₦${(kpi.monthly_revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            updateTrend('kpi-monthly-trend', kpi.monthly_trend, 'from last month');
+            
+            const npEl = document.getElementById('kpi-net-profit');
+            npEl.textContent = `₦${(kpi.net_profit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            if (kpi.net_profit < 0) npEl.style.color = 'var(--status-danger)';
+            else npEl.style.color = 'var(--text-primary)';
+            
+            updateTrend('kpi-profit-trend', kpi.profit_trend, 'from last month');
         }
         
-        document.getElementById('metric-low-stock').textContent = m.low_stock_count;
-        
-        // Recent Sales
-        const salesBody = document.getElementById('recentSalesBody');
-        salesBody.innerHTML = '';
-        if (data.recent_sales.length === 0) {
-            salesBody.innerHTML = getEmptyStateHTML(4, "No recent sales", "Sales history will appear here.");
-        } else {
-            data.recent_sales.forEach(s => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${s.created_at.split(' ')[0]}</td>
-                    <td><strong>₦${s.total_amount.toFixed(2)}</strong></td>
-                    <td><span class="badge badge-neutral">${escapeHtml(s.payment_method)}</span></td>
-                    <td><span class="badge badge-success">Paid</span></td>
-                `;
-                salesBody.appendChild(tr);
-            });
+        // Recent Transactions
+        const txBody = document.getElementById('recentTransactionsBody');
+        if (txBody) {
+            txBody.innerHTML = '';
+            if (!data.recent_transactions || data.recent_transactions.length === 0) {
+                txBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding: 2rem;">No recent transactions. <br><a href="/sales" class="btn btn-sm btn-primary mt-2">Record Sale</a></td></tr>`;
+            } else {
+                data.recent_transactions.forEach(tx => {
+                    const tr = document.createElement('tr');
+                    const statusClass = 'badge-success'; // Simplified for now, real app might check actual status
+                    tr.innerHTML = `
+                        <td><strong>${escapeHtml(tx.customer_name || 'Walk-in Customer')}</strong></td>
+                        <td>${escapeHtml(tx.product_name || 'Multiple items')}</td>
+                        <td><strong>₦${tx.total_amount.toLocaleString()}</strong></td>
+                        <td><span class="badge badge-neutral">${escapeHtml(tx.payment_method)}</span></td>
+                        <td>${new Date(tx.created_at).toLocaleDateString()}</td>
+                        <td><span class="badge ${statusClass}">Completed</span></td>
+                    `;
+                    txBody.appendChild(tr);
+                });
+            }
         }
         
-        // Top Products
-        const topBody = document.getElementById('topProductsBody');
-        topBody.innerHTML = '';
-        if (data.top_products.length === 0) {
-            topBody.innerHTML = getEmptyStateHTML(2, "No sales data", "Sell products to see your top performers.");
-        } else {
-            data.top_products.forEach(p => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${escapeHtml(p.name)}</strong></td>
-                    <td style="text-align: right;">${p.total_sold} units</td>
+        // Best Selling Products
+        const prodBody = document.getElementById('topProductsBody');
+        if (prodBody) {
+            prodBody.innerHTML = '';
+            if (!data.top_products || data.top_products.length === 0) {
+                prodBody.innerHTML = `<tr><td colspan="3" class="text-center text-muted" style="padding: 2rem;">No product sales yet.</td></tr>`;
+            } else {
+                data.top_products.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${escapeHtml(p.name)}</strong></td>
+                        <td>${p.units_sold}</td>
+                        <td>₦${(p.revenue || 0).toLocaleString()}</td>
+                    `;
+                    prodBody.appendChild(tr);
+                });
+            }
+        }
+        
+        // Low Stock Alerts
+        const stockBody = document.getElementById('lowStockBody');
+        if (stockBody) {
+            stockBody.innerHTML = '';
+            if (!data.low_stock || data.low_stock.length === 0) {
+                stockBody.innerHTML = `<tr><td colspan="3" class="text-center text-muted" style="padding: 2rem;">All stock levels are healthy!</td></tr>`;
+            } else {
+                data.low_stock.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const badgeClass = item.status === 'Out of Stock' ? 'badge-danger' : 'badge-warning';
+                    tr.innerHTML = `
+                        <td><strong>${escapeHtml(item.name)}</strong></td>
+                        <td>${item.current_stock}</td>
+                        <td><span class="badge ${badgeClass}">${item.status}</span></td>
+                    `;
+                    stockBody.appendChild(tr);
+                });
+            }
+        }
+
+        // Business Insight
+        const insightCard = document.getElementById('insightCard');
+        if (insightCard) {
+            if (kpi.weekly_trend > 0) {
+                insightCard.innerHTML = `
+                    <div class="icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <h3>Your sales increased ${Math.round(kpi.weekly_trend)}% this week!</h3>
+                    <p>Great job! Your business is growing faster than last week.</p>
+                    <a href="/analytics" class="btn btn-primary btn-sm">View Analytics &rarr;</a>
                 `;
-                topBody.appendChild(tr);
-            });
+            } else if (kpi.weekly_trend < 0) {
+                insightCard.innerHTML = `
+                    <div class="icon" style="color: var(--status-warning);"><i class="fa-solid fa-chart-line"></i></div>
+                    <h3 style="color: var(--text-primary);">Sales are down ${Math.round(Math.abs(kpi.weekly_trend))}% this week.</h3>
+                    <p>Consider running a promotion to boost sales.</p>
+                    <a href="/sales" class="btn btn-primary btn-sm">Record Sale &rarr;</a>
+                `;
+            } else {
+                insightCard.innerHTML = `
+                    <div class="icon"><i class="fa-solid fa-lightbulb"></i></div>
+                    <h3>Keep up the good work!</h3>
+                    <p>Your business insights will appear here as you record more sales.</p>
+                    <a href="/products" class="btn btn-primary btn-sm">Manage Products &rarr;</a>
+                `;
+            }
         }
         
     } catch (error) {
         console.error('Error fetching dashboard metrics:', error);
     }
+}
+
+// DASHBOARD CHART
+let dashboardChartInstance = null;
+
+async function fetchDashboardChart(days) {
+    try {
+        const response = await fetch(\`/dashboard/api/sales_trend?days=\${days}\`);
+        const data = await response.json();
+        
+        const ctx = document.getElementById('salesOverviewChart');
+        if (!ctx) return;
+        
+        if (dashboardChartInstance) {
+            dashboardChartInstance.destroy();
+        }
+        
+        if (data.labels.length === 0) {
+            // Show empty state inside canvas container manually or just empty chart
+            ctx.parentNode.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color: var(--text-secondary);"><i class="fa-solid fa-chart-line" style="font-size:2rem; margin-bottom:1rem; opacity:0.5;"></i><p>No sales data yet.</p></div>';
+            return;
+        }
+        
+        dashboardChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Sales Revenue (₦)',
+                    data: data.data,
+                    borderColor: '#1C54F2',
+                    backgroundColor: 'rgba(28, 84, 242, 0.1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#1C54F2',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0F172A',
+                        padding: 10,
+                        titleFont: { size: 13 },
+                        bodyFont: { size: 14, weight: 'bold' },
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return '₦' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 12 }, color: '#94A3B8' } },
+                    y: { 
+                        beginAtZero: true, 
+                        border: { display: false },
+                        grid: { color: '#E2E8F0', drawBorder: false },
+                        ticks: { 
+                            font: { size: 12 }, color: '#94A3B8',
+                            callback: function(value) {
+                                if (value >= 1000) return '₦' + (value/1000) + 'k';
+                                return '₦' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error fetching chart data:', error);
+    }
+}
+
+function initDashboardChart() {
+    const controls = document.getElementById('chartRangeControls');
+    if (!controls) return;
+    
+    // Initial load
+    fetchDashboardChart(7);
+    
+    controls.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            document.querySelectorAll('#chartRangeControls .range-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            const days = e.target.getAttribute('data-days');
+            fetchDashboardChart(days);
+        }
+    });
 }
 
 // ANALYTICS FUNCTIONS
