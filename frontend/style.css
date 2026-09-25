@@ -56,6 +56,9 @@ input, select, textarea { font-family: inherit; }
 h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
 .text-muted { color: var(--text-secondary); }
 
+/* Utility Classes */
+.flex-between { display: flex; justify-content: space-between; }
+.align-center { align-items: center; }
 /* ==========================================
    BUTTONS
 ========================================= */
@@ -63,6 +66,11 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-sp
     display: inline-flex; align-items: center; justify-content: center;
     gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 0.875rem; font-weight: 600;
     border-radius: var(--radius-sm); transition: all 0.2s; border: 1px solid transparent;
+}
+.btn:disabled, .btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 .btn-primary {
     background-color: var(--brand-blue); color: white;
