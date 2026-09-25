@@ -132,24 +132,23 @@
 }
 </style>
 
-<div class="page-header" style="margin-bottom: 2rem;">
-    <div class="flex-between align-center" style="flex-wrap: wrap; gap: 1rem;">
-        <div>
-            <h1 class="page-title">Reports</h1>
-            <p class="page-subtitle" style="margin-bottom: 0;">Generate clear reports to understand and manage your business.</p>
-        </div>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-            <label for="globalDateFilter" style="font-weight: 500; font-size: 0.875rem;">Period:</label>
-            <select id="globalDateFilter" class="form-control" style="width: 180px;" onchange="handleDateChange()">
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month" selected>This Month</option>
-                <option value="last_month">Last Month</option>
-                <option value="3_months">Last 3 Months</option>
-                <option value="year">This Year</option>
-                <option value="all">All Time</option>
-            </select>
-        </div>
+<div class="flex-between align-center" style="margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 class="page-title">Reports</h1>
+        <p class="page-subtitle" style="margin-bottom: 0;">Generate clear reports to understand and manage your business.</p>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <label for="globalDateFilter" style="font-weight: 500; font-size: 0.875rem;">Period:</label>
+        <select id="globalDateFilter" class="form-control" style="width: 180px;" onchange="handleDateChange()">
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month" selected>This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="3_months">Last 3 Months</option>
+            <option value="year">This Year</option>
+            <option value="all">All Time</option>
+        </select>
     </div>
 </div>
 
@@ -200,8 +199,8 @@
 <div class="flex-between align-center" style="margin-bottom: 1rem;">
     <div></div>
     <div id="reportActions" style="display: none; gap: 0.5rem;">
-        <button class="btn btn-outline" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Save PDF</button>
-        <button class="btn btn-primary" onclick="downloadCSV()"><i class="fa-solid fa-download"></i> Export CSV</button>
+        <button id="btnPrint" class="btn btn-outline" onclick="window.print()" disabled><i class="fa-solid fa-print"></i> Print / Save PDF</button>
+        <button id="btnExport" class="btn btn-primary" onclick="downloadCSV()" disabled><i class="fa-solid fa-download"></i> Export CSV</button>
     </div>
 </div>
 
@@ -264,5 +263,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='reports.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='reports.js') }}?v=5"></script>
 {% endblock %}
