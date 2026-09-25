@@ -113,6 +113,8 @@ CREATE TABLE expenses (
     amount REAL NOT NULL,
     category TEXT,
     expense_date DATE NOT NULL,
+    payment_method TEXT DEFAULT 'Cash',
+    notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (business_id) REFERENCES businesses (id)
 );
