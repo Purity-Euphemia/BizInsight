@@ -315,7 +315,7 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-sp
 .empty-desc { font-size: 0.875rem; color: var(--text-secondary); }
 
 .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(2px); z-index: 2000; align-items: center; justify-content: center; }
-.modal-content { background: var(--bg-white); border-radius: var(--radius-md); width: 90%; max-width: 500px; box-shadow: var(--shadow-dropdown); padding: 1.5rem; }
+.modal-content { background: var(--bg-white); border-radius: var(--radius-md); width: 90%; max-width: 500px; box-shadow: var(--shadow-dropdown); padding: 1.5rem; max-height: 90vh; overflow-y: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .modal-header h2 { font-size: 1.25rem; margin: 0; }
 .modal-close { font-size: 1.5rem; color: var(--text-tertiary); cursor: pointer; }

@@ -15,30 +15,6 @@ def get_metrics():
     db = get_db()
     business_id = g.user['business_id']
     
-    metrics = db.execute(
-        """SELECT 
-            (SELECT COUNT(*) FROM customers WHERE business_id = ? AND is_archived = 0) as total_customers,
-            (SELECT COUNT(*) FROM customers WHERE business_id = ? AND is_archived = 0 AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now', 'localtime')) as new_customers,
-            (SELECT COUNT(DISTINCT c.id) FROM customers c JOIN sales s ON c.id = s.customer_id WHERE c.business_id = ? AND c.is_archived = 0 AND s.status = 'Completed' GROUP BY c.id HAVING COUNT(s.id) > 1) as returning_customers,
-            (SELECT SUM(s.total_amount) FROM sales s JOIN customers c ON s.customer_id = c.id WHERE s.business_id = ? AND c.is_archived = 0 AND s.status = 'Completed') as total_revenue
-        """,
-        (business_id, business_id, business_id, business_id)
-    ).fetchone()
-    
-    return jsonify({
-        'total_customers': metrics['total_customers'] or 0,
-        'new_customers': metrics['new_customers'] or 0,
-        # returning_customers will return a row count for the subquery if it wasn't wrapped properly, wait:
-        # SQLite subquery returns a single value, but SELECT COUNT from GROUP BY returns multiple rows if there are multiple returning customers.
-        # So I will do it with two queries for safety.
-    })
-
-# Overriding metrics route to be safer with SQLite aggregations
-@bp.route('/metrics', methods=['GET'], endpoint='metrics_safe')
-def get_metrics_safe():
-    db = get_db()
-    business_id = g.user['business_id']
-    
     total = db.execute("SELECT COUNT(*) FROM customers WHERE business_id = ? AND is_archived = 0", (business_id,)).fetchone()[0]
     new_c = db.execute("SELECT COUNT(*) FROM customers WHERE business_id = ? AND is_archived = 0 AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now', 'localtime')", (business_id,)).fetchone()[0]
     returning = db.execute("SELECT COUNT(*) FROM (SELECT customer_id FROM sales WHERE business_id = ? AND status = 'Completed' AND customer_id IS NOT NULL GROUP BY customer_id HAVING COUNT(id) > 1)", (business_id,)).fetchone()[0]

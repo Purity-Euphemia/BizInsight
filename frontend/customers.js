@@ -5,7 +5,7 @@ let currentSearch = '';
 let currentType = '';
 let currentActivity = '';
 let currentDate = '';
-let debounceTimeout;
+let customerDebounceTimeout;
 let dupDebounceTimeout;
 
 let activeCustomerId = null;
@@ -146,9 +146,9 @@ function renderPagination(page, totalPages, totalItems) {
 
 // Filters
 function debounceFetchCustomers() {
-    clearTimeout(debounceTimeout);
+    clearTimeout(customerDebounceTimeout);
     currentSearch = document.getElementById('customerSearch').value;
-    debounceTimeout = setTimeout(() => fetchCustomers(1), 300);
+    customerDebounceTimeout = setTimeout(() => fetchCustomers(1), 300);
 }
 
 function filterCustomers() {

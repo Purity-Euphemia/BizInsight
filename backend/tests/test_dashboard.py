@@ -52,31 +52,24 @@ def test_dashboard_metrics(auth_client):
     assert res.status_code == 200
     
     data = res.json
-    m = data['metrics']
+    m = data['kpi']
     
-    # Revenue = 30.0
-    assert m['revenue'] == 30.0
-    
-    # Expenses = 10.0
-    assert m['expenses'] == 10.0
-    
-    # COGS = 2 qty * 5.0 cost = 10.0
-    assert m['cogs'] == 10.0
-    
-    # Gross Profit = Rev (30) - COGS (10) = 20.0
-    assert m['gross_profit'] == 20.0
+    # Sales assertions
+    assert m['today_sales'] == 30.0
+    assert m['monthly_revenue'] == 30.0
     
     # Net Profit = GP (20) - Expenses (10) = 10.0
     assert m['net_profit'] == 10.0
     
-    # Low stock count: quantity is 2, low_stock_limit is 5. So 1 item is low stock
-    assert m['low_stock_count'] == 1
+    # Low stock list
+    assert len(data['low_stock']) == 1
     
-    # Recent Sales
-    assert len(data['recent_sales']) == 1
-    assert data['recent_sales'][0]['total_amount'] == 30.0
+    # Recent Transactions
+    assert len(data['recent_transactions']) == 1
+    assert data['recent_transactions'][0]['total_amount'] == 30.0
     
     # Top Products
     assert len(data['top_products']) == 1
     assert data['top_products'][0]['name'] == 'Test Item'
-    assert data['top_products'][0]['total_sold'] == 2
+    assert data['top_products'][0]['units_sold'] == 2
+
