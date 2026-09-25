@@ -2,38 +2,260 @@
 {% block title %}Analytics - BizInsight{% endblock %}
 
 {% block content %}
-<div class="flex-between align-center" style="margin-bottom: 2rem;">
+<div class="flex-between align-center" style="margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
         <h1 class="page-title">Business Analytics</h1>
-        <p class="page-subtitle" style="margin-bottom: 0;">Interactive insights, trends, and breakdowns.</p>
+        <p class="page-subtitle" style="margin-bottom: 0;">Understand your business performance and make smarter decisions.</p>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <label for="analyticsDateFilter" style="font-weight: 500; font-size: 0.875rem;">Period:</label>
+        <select id="analyticsDateFilter" class="form-control" style="width: 180px;" onchange="fetchAnalytics()">
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month" selected>This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="3_months">Last 3 Months</option>
+            <option value="year">This Year</option>
+            <option value="all">All Time</option>
+        </select>
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-    <!-- Sales Trend Line Chart -->
-    <div class="card" style="margin-bottom: 0;">
-        <h3 style="margin-bottom: 1.5rem;">30-Day Sales Trend</h3>
-        <canvas id="salesTrendChart"></canvas>
+<!-- Main KPIs -->
+<div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;" id="analyticsKPIs">
+    <!-- Revenue -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Total Revenue</span>
+            <div class="kpi-icon blue"><i class="fa-solid fa-money-bill-wave"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiRevenue">--</div>
+        <div class="kpi-trend" id="trendRevenue">--</div>
+    </div>
+    <!-- Gross Profit -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Gross Profit</span>
+            <div class="kpi-icon green"><i class="fa-solid fa-arrow-trend-up"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiGrossProfit">--</div>
+        <div class="kpi-trend" id="trendGrossProfit">--</div>
+    </div>
+    <!-- Net Profit -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Net Profit</span>
+            <div class="kpi-icon teal"><i class="fa-solid fa-sack-dollar"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiNetProfit">--</div>
+        <div class="kpi-trend" id="trendNetProfit">--</div>
+    </div>
+    <!-- Total Expenses -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Operating Expenses</span>
+            <div class="kpi-icon purple"><i class="fa-solid fa-wallet"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiExpenses">--</div>
+        <div class="kpi-trend" id="trendExpenses">--</div>
+    </div>
+    <!-- Total Sales -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Total Sales</span>
+            <div class="kpi-icon amber"><i class="fa-solid fa-receipt"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiSalesCount">--</div>
+        <div class="kpi-trend" id="trendSalesCount">--</div>
+    </div>
+    <!-- Avg Order -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span>Average Order Value</span>
+            <div class="kpi-icon blue"><i class="fa-solid fa-cart-shopping"></i></div>
+        </div>
+        <div class="kpi-value" id="kpiAvgOrder">--</div>
+        <div class="kpi-trend" id="trendAvgOrder">--</div>
+    </div>
+</div>
+
+<!-- Business Insights -->
+<div class="card" style="margin-bottom: 2rem;">
+    <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-lightbulb" style="color: var(--status-warning);"></i> Business Insights</h3>
+    <div id="insightsContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div class="text-center text-muted" style="padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Analyzing data...</div>
+    </div>
+</div>
+
+<div class="dash-grid" style="margin-bottom: 2rem;">
+    <!-- Revenue & Sales Trend Chart -->
+    <div class="card dash-col" style="margin-bottom: 0;">
+        <div class="card-header">
+            <h3>Revenue & Sales Trend</h3>
+            <div class="card-actions">
+                <select id="trendChartType" class="form-control" style="padding: 0.25rem 0.5rem; height: auto;" onchange="renderTrendsChart()">
+                    <option value="revenue">Revenue</option>
+                    <option value="sales">Number of Sales</option>
+                </select>
+            </div>
+        </div>
+        <div style="position: relative; height: 350px; width: 100%;">
+            <canvas id="trendsChart"></canvas>
+        </div>
     </div>
 
-    <!-- Expense Breakdown Doughnut -->
-    <div class="card" style="margin-bottom: 0;">
-        <h3 style="margin-bottom: 1.5rem;">Expense Breakdown</h3>
-        <div style="position: relative; height: 300px; width: 100%;">
-            <canvas id="expenseBreakdownChart"></canvas>
+    <!-- Profit Overview Chart -->
+    <div class="card dash-col" style="margin-bottom: 0;">
+        <div class="card-header">
+            <h3>Profit Overview</h3>
+        </div>
+        <div style="position: relative; height: 350px; width: 100%;">
+            <canvas id="profitChart"></canvas>
         </div>
     </div>
 </div>
 
-<!-- Profit Trend Bar Chart -->
-<div class="card">
-    <h3 style="margin-bottom: 1.5rem;">Revenue vs Expenses (Monthly)</h3>
-    <canvas id="profitTrendChart" style="max-height: 400px;"></canvas>
+<div class="dash-grid" style="margin-bottom: 2rem;">
+    <!-- Top Selling Products -->
+    <div class="card dash-col" style="margin-bottom: 0;">
+        <div class="card-header">
+            <h3>Top Selling Products</h3>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th style="text-align: right;">Units</th>
+                        <th style="text-align: right;">Revenue</th>
+                        <th style="text-align: right;">Profit</th>
+                    </tr>
+                </thead>
+                <tbody id="topProductsBody">
+                    <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Expenses by Category -->
+    <div class="card dash-col" style="margin-bottom: 0;">
+        <div class="card-header">
+            <h3>Expenses by Category</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="position: relative; height: 220px; width: 100%; margin-bottom: 1.5rem;">
+                <canvas id="expensesChart"></canvas>
+            </div>
+            <div style="width: 100%;" id="expensesList">
+                <!-- Expense breakdown list -->
+            </div>
+        </div>
+    </div>
 </div>
+
+<div class="dash-grid" style="margin-bottom: 2rem;">
+    <!-- Customer Analytics -->
+    <div class="card dash-col" style="margin-bottom: 0;">
+        <div class="card-header">
+            <h3>Customer Insights</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; text-align: center;">
+            <div style="background: #F8FAFC; padding: 1rem; border-radius: 8px;">
+                <div style="font-size: 0.875rem; color: var(--text-secondary);">Active Customers</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--brand-navy);" id="custActive">--</div>
+            </div>
+            <div style="background: #F8FAFC; padding: 1rem; border-radius: 8px;">
+                <div style="font-size: 0.875rem; color: var(--text-secondary);">Returning</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--brand-blue);" id="custReturning">--</div>
+            </div>
+            <div style="background: #F8FAFC; padding: 1rem; border-radius: 8px;">
+                <div style="font-size: 0.875rem; color: var(--text-secondary);">New</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--status-success);" id="custNew">--</div>
+            </div>
+        </div>
+        
+        <h4 style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; text-transform: uppercase;">Top Customers by Revenue</h4>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th style="text-align: center;">Purchases</th>
+                        <th style="text-align: right;">Total Spent</th>
+                    </tr>
+                </thead>
+                <tbody id="topCustomersBody">
+                    <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Inventory & Payments -->
+    <div class="dash-col" style="margin-bottom: 0; display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- Inventory Insights -->
+        <div class="card" style="flex: 1; margin-bottom: 0;">
+            <div class="card-header">
+                <h3>Inventory Alerts</h3>
+                <a href="/inventory" class="btn btn-sm btn-secondary">View Inventory</a>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="flex: 1;">
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Est. Inventory Value</div>
+                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);" id="invValue">--</div>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Total Products</div>
+                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);" id="invProducts">--</div>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th style="text-align: right;">Stock</th>
+                            <th style="text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryAlertsBody">
+                        <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Payment Methods -->
+        <div class="card" style="flex: 1; margin-bottom: 0;">
+            <div class="card-header">
+                <h3>Payment Methods</h3>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th style="text-align: center;">Txns</th>
+                            <th style="text-align: right;">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsBody">
+                        <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', fetchAnalytics);
-</script>
+<script src="{{ url_for('static', filename='analytics.js') }}?v=1"></script>
 {% endblock %}
