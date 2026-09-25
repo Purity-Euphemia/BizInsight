@@ -2,39 +2,267 @@
 {% block title %}Reports - BizInsight{% endblock %}
 
 {% block content %}
-<div class="flex-between align-center" style="margin-bottom: 2rem;">
-    <div>
-        <h1 class="page-title">Data & Reports</h1>
-        <p class="page-subtitle" style="margin-bottom: 0;">Export your business data securely as CSV files.</p>
+<style>
+/* Print Styles */
+@media print {
+    .sidebar, .navbar, .page-header, #reportSelectionContainer, #reportActions, .no-print {
+        display: none !important;
+    }
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+    }
+    #reportPreviewContainer {
+        display: block !important;
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    .kpi-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        page-break-inside: avoid;
+    }
+    .data-table th {
+        background-color: #f8fafc !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+    }
+    .badge {
+        border: 1px solid #ccc;
+    }
+}
+
+.report-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.report-card:hover {
+    border-color: var(--brand-blue);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transform: translateY(-2px);
+}
+.report-card.active {
+    border-color: var(--brand-blue);
+    background-color: #f0f7ff;
+    box-shadow: 0 0 0 1px var(--brand-blue);
+}
+.report-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+#reportPreviewContainer {
+    display: none;
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 2.5rem;
+    margin: 2rem auto 0 auto;
+    max-width: 1000px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.preview-header {
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+.preview-title {
+    font-size: 1.75rem;
+    color: var(--brand-navy);
+    margin: 0 0 0.5rem 0;
+}
+.preview-meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.summary-item {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+.summary-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--brand-navy);
+    word-break: break-word;
+}
+
+/* Spinner */
+.spinner-container {
+    display: none;
+    text-align: center;
+    padding: 4rem 2rem;
+}
+</style>
+
+<div class="page-header" style="margin-bottom: 2rem;">
+    <div class="flex-between align-center" style="flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 class="page-title">Reports</h1>
+            <p class="page-subtitle" style="margin-bottom: 0;">Generate clear reports to understand and manage your business.</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <label for="globalDateFilter" style="font-weight: 500; font-size: 0.875rem;">Period:</label>
+            <select id="globalDateFilter" class="form-control" style="width: 180px;" onchange="handleDateChange()">
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month" selected>This Month</option>
+                <option value="last_month">Last Month</option>
+                <option value="3_months">Last 3 Months</option>
+                <option value="year">This Year</option>
+                <option value="all">All Time</option>
+            </select>
+        </div>
     </div>
 </div>
 
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div style="margin-bottom: 1.5rem;">
-            <div class="kpi-icon blue" style="margin-bottom: 1rem;"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-            <h3 style="margin-bottom: 0.5rem;">Sales Report</h3>
-            <p class="text-muted" style="font-size: 0.9rem;">Complete history of all sales, including date, amount, payment method, and customer.</p>
-        </div>
-        <a href="/reports/api/download/sales" class="btn btn-primary btn-block"><i class="fa-solid fa-download"></i> Download CSV</a>
+<div id="reportSelectionContainer" class="dash-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-bottom: 2rem;">
+    <!-- Sales Report -->
+    <div class="report-card" onclick="selectReport('sales')">
+        <div class="report-icon bg-blue-50" style="color: var(--brand-blue);"><i class="fa-solid fa-chart-line"></i></div>
+        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Sales Report</h3>
+        <p class="text-muted" style="font-size: 0.875rem; flex: 1;">Performance of completed sales, revenue, average order value, and top products.</p>
+    </div>
+    
+    <!-- Profit & Loss -->
+    <div class="report-card" onclick="selectReport('profit_loss')">
+        <div class="report-icon bg-green-50" style="color: var(--status-success);"><i class="fa-solid fa-scale-balanced"></i></div>
+        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Profit & Loss</h3>
+        <p class="text-muted" style="font-size: 0.875rem; flex: 1;">Financial overview showing Revenue, COGS, Gross Profit, Expenses, and Net Profit.</p>
     </div>
 
-    <div class="kpi-card">
-        <div style="margin-bottom: 1.5rem;">
-            <div class="kpi-icon amber" style="margin-bottom: 1rem;"><i class="fa-solid fa-file-invoice"></i></div>
-            <h3 style="margin-bottom: 0.5rem;">Expenses Report</h3>
-            <p class="text-muted" style="font-size: 0.9rem;">Comprehensive list of all logged business expenses categorized for easy accounting.</p>
-        </div>
-        <a href="/reports/api/download/expenses" class="btn btn-primary btn-block"><i class="fa-solid fa-download"></i> Download CSV</a>
+    <!-- Expenses -->
+    <div class="report-card" onclick="selectReport('expenses')">
+        <div class="report-icon" style="background: #FFF1F2; color: var(--status-danger);"><i class="fa-solid fa-receipt"></i></div>
+        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Expense Report</h3>
+        <p class="text-muted" style="font-size: 0.875rem; flex: 1;">Detailed breakdown of all operating expenses and categorized spending.</p>
     </div>
 
-    <div class="kpi-card">
-        <div style="margin-bottom: 1.5rem;">
-            <div class="kpi-icon purple" style="margin-bottom: 1rem;"><i class="fa-solid fa-file-lines"></i></div>
-            <h3 style="margin-bottom: 0.5rem;">Inventory Report</h3>
-            <p class="text-muted" style="font-size: 0.9rem;">Snapshot of current stock levels, buying/selling prices, and total stock valuation.</p>
-        </div>
-        <a href="/reports/api/download/inventory" class="btn btn-primary btn-block"><i class="fa-solid fa-download"></i> Download CSV</a>
+    <!-- Products -->
+    <div class="report-card" onclick="selectReport('products')">
+        <div class="report-icon bg-amber-50" style="color: var(--status-warning);"><i class="fa-solid fa-box-open"></i></div>
+        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Product Performance</h3>
+        <p class="text-muted" style="font-size: 0.875rem; flex: 1;">Review units sold, revenue, COGS, and profit margin per product.</p>
+    </div>
+
+    <!-- Inventory -->
+    <div class="report-card" onclick="selectReport('inventory')">
+        <div class="report-icon" style="background: #F3E8FF; color: var(--brand-purple);"><i class="fa-solid fa-warehouse"></i></div>
+        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Inventory Report</h3>
+        <p class="text-muted" style="font-size: 0.875rem; flex: 1;">Current stock levels, low-stock alerts, and total inventory valuation.</p>
+    </div>
+
+    <!-- Customers -->
+    <div class="report-card" onclick="selectReport('customers')">
+        <div class="report-icon" style="background: #E0F2FE; color: #0284C7;"><i class="fa-solid fa-users"></i></div>
+        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Customer Report</h3>
+        <p class="text-muted" style="font-size: 0.875rem; flex: 1;">Insights into active customers, purchase frequency, and total lifetime value.</p>
     </div>
 </div>
+
+<div class="flex-between align-center" style="margin-bottom: 1rem;">
+    <div></div>
+    <div id="reportActions" style="display: none; gap: 0.5rem;">
+        <button class="btn btn-outline" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Save PDF</button>
+        <button class="btn btn-primary" onclick="downloadCSV()"><i class="fa-solid fa-download"></i> Export CSV</button>
+    </div>
+</div>
+
+<div class="spinner-container" id="loadingSpinner">
+    <div style="font-size: 2rem; color: var(--brand-blue); margin-bottom: 1rem;">
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+    </div>
+    <h3 style="margin: 0; color: var(--brand-navy);">Generating report...</h3>
+    <p class="text-muted">Please wait while we gather your data.</p>
+</div>
+
+<div id="errorState" style="display: none; text-align: center; padding: 4rem 2rem; background: white; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+    <div style="font-size: 3rem; color: var(--status-danger); margin-bottom: 1rem;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h3>Unable to generate report</h3>
+    <p class="text-muted" style="margin-bottom: 1.5rem;">Something went wrong while creating this report.</p>
+    <button class="btn btn-primary" onclick="generateReport()"><i class="fa-solid fa-rotate-right"></i> Try Again</button>
+</div>
+
+<div id="emptyState" style="display: none; text-align: center; padding: 4rem 2rem; background: white; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+    <div style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"><i class="fa-solid fa-folder-open"></i></div>
+    <h3>No data available for this period.</h3>
+    <p class="text-muted">Try selecting a different date range or record more business activity.</p>
+</div>
+
+<div id="reportPreviewContainer">
+    <div class="preview-header">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+            <div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--brand-blue); margin-bottom: 0.25rem;"><i class="fa-solid fa-chart-pie"></i> BizInsight</div>
+                <div style="font-weight: 500; font-size: 1.1rem;" id="previewBusinessName">{{ g.user.business_name if g.user.business_name else 'My Business' }}</div>
+            </div>
+            <div style="text-align: right;">
+                <h2 class="preview-title" id="previewReportTitle">Report Title</h2>
+                <div class="preview-meta">
+                    <span id="previewReportPeriod">Period: This Month</span>
+                </div>
+                <div class="preview-meta" style="margin-top: 0.25rem;">
+                    <span id="previewReportDate">Generated: </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Section -->
+    <div class="summary-grid" id="previewSummary">
+        <!-- Injected via JS -->
+    </div>
+    
+    <!-- Main Content/Table -->
+    <div id="previewContent">
+        <!-- Injected via JS -->
+    </div>
+    
+    <!-- Footer -->
+    <div style="margin-top: 3rem; border-top: 1px solid var(--border-color); padding-top: 1rem; text-align: center; font-size: 0.8rem; color: var(--text-secondary);">
+        Generated by BizInsight Reporting System
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='reports.js') }}?v=1"></script>
 {% endblock %}
