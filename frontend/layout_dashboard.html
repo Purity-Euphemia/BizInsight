@@ -54,8 +54,9 @@
             
             <div class="sidebar-footer">
                 <nav class="sidebar-nav">
-                    <a href="#" style="margin-bottom: 0.5rem;"><i class="fa-solid fa-gear fa-fw"></i> Settings</a>
-                    <a href="#" style="margin-bottom: 0.5rem;"><i class="fa-regular fa-user fa-fw"></i> Profile</a>
+                    <a href="{{ url_for('main.settings') }}" style="margin-bottom: 0.5rem;" class="{% if request.endpoint == 'main.settings' %}active{% endif %}">
+                        <i class="fa-solid fa-gear fa-fw"></i> Settings
+                    </a>
                     <a href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-arrow-right-from-bracket fa-fw"></i> Log Out</a>
                 </nav>
             </div>

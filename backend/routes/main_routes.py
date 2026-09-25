@@ -68,6 +68,12 @@ def reports():
     """Render the reports download page."""
     return render_template('reports.html')
 
+@bp.route('/settings')
+@login_required
+def settings():
+    """Render the settings page."""
+    return render_template('settings.html')
+
 
 
 
