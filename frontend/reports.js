@@ -78,6 +78,8 @@ async function generateReport() {
         } else {
             document.getElementById('reportPreviewContainer').style.display = 'block';
             document.getElementById('reportActions').style.display = 'flex';
+            document.getElementById('btnPrint').disabled = false;
+            document.getElementById('btnExport').disabled = false;
         }
         
     } catch (e) {
