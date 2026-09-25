@@ -9,6 +9,16 @@ let productDebounceTimeout;
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
+    // Check if there is a search query in the URL from the global search
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchQuery = urlParams.get('search');
+    
+    if (searchQuery) {
+        currentSearch = searchQuery;
+        const searchInput = document.getElementById('searchQuery');
+        if (searchInput) searchInput.value = searchQuery;
+    }
+
     fetchProductMetrics();
     fetchProducts(1);
 });

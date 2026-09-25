@@ -538,3 +538,70 @@ async function loadProfitTrend() {
         }
     });
 }
+
+// Global Search
+function handleGlobalSearch(event) {
+    if (event.key === 'Enter') {
+        const query = event.target.value.trim();
+        if (query) {
+            window.location.href = `/products?search=${encodeURIComponent(query)}`;
+        }
+    }
+}
+
+// Notifications
+let notificationsLoaded = false;
+async function fetchNotifications() {
+    try {
+        const res = await fetch('/notifications/api');
+        if (!res.ok) return;
+        const notifications = await res.json();
+        
+        const badge = document.getElementById('notificationBadge');
+        const body = document.getElementById('notificationsBody');
+        
+        if (notifications.length > 0) {
+            if (badge) badge.style.display = 'block';
+            if (body) {
+                body.innerHTML = notifications.map(n => `
+                    <div class="nd-item">
+                        <div class="nd-title ${n.type}">${escapeHtml(n.title)}</div>
+                        <div class="nd-desc">${escapeHtml(n.message)}</div>
+                    </div>
+                `).join('');
+            }
+        } else {
+            if (badge) badge.style.display = 'none';
+            if (body) {
+                body.innerHTML = '<div style="padding:1rem; text-align:center; color:var(--text-secondary); font-size:0.875rem;">No new notifications</div>';
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load notifications', e);
+    }
+}
+
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationsDropdown');
+    if (!dropdown) return;
+    
+    dropdown.classList.toggle('show');
+    
+    if (dropdown.classList.contains('show') && !notificationsLoaded) {
+        fetchNotifications();
+        notificationsLoaded = true;
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (event) => {
+    const bell = document.getElementById('topbarBell');
+    if (bell && !bell.contains(event.target)) {
+        document.getElementById('notificationsDropdown')?.classList.remove('show');
+    }
+});
+
+// Initial notification check on load
+document.addEventListener('DOMContentLoaded', () => {
+    fetchNotifications();
+});

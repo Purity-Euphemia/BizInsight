@@ -231,6 +231,42 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-sp
 .topbar-actions { display: flex; align-items: center; gap: 1.5rem; }
 .topbar-bell { position: relative; cursor: pointer; color: var(--text-secondary); font-size: 1.25rem; }
 .topbar-bell .badge-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background-color: var(--status-danger); border-radius: 50%; border: 2px solid white; }
+
+.notifications-dropdown {
+    position: absolute;
+    top: 40px;
+    right: -10px;
+    width: 300px;
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+    cursor: default;
+}
+.notifications-dropdown.show { display: flex; }
+.nd-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--brand-navy);
+    font-size: 0.95rem;
+}
+.nd-body {
+    max-height: 350px;
+    overflow-y: auto;
+}
+.nd-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.nd-item:last-child { border-bottom: none; }
+.nd-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.25rem; }
+.nd-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
+.nd-title.danger { color: var(--status-danger); }
+.nd-title.warning { color: var(--status-warning); }
 .topbar-user { display: flex; align-items: center; gap: 0.75rem; cursor: pointer; }
 .topbar-user .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--brand-navy); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem; }
 .topbar-user .info { display: flex; flex-direction: column; }

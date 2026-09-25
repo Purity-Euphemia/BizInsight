@@ -68,13 +68,20 @@
             <header class="topbar">
                 <div class="topbar-search">
                     <i class="fa-solid fa-search"></i>
-                    <input type="text" placeholder="Search anything...">
+                    <input type="text" id="globalSearchInput" placeholder="Search products (Press Enter)..." onkeydown="handleGlobalSearch(event)">
                 </div>
                 
                 <div class="topbar-actions">
-                    <div class="topbar-bell">
+                    <div class="topbar-bell" id="topbarBell" onclick="toggleNotifications()">
                         <i class="fa-regular fa-bell"></i>
-                        <div class="badge-dot"></div>
+                        <div class="badge-dot" id="notificationBadge" style="display:none;"></div>
+                        <!-- Notification Dropdown -->
+                        <div class="notifications-dropdown" id="notificationsDropdown">
+                            <div class="nd-header">Notifications</div>
+                            <div class="nd-body" id="notificationsBody">
+                                <div style="padding:1rem; text-align:center; color:var(--text-secondary); font-size:0.875rem;">Loading...</div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 0.5rem;"></div>
@@ -105,7 +112,7 @@
     </div>
 
     <!-- Main JS -->
-    <script src="{{ url_for('static', filename='app.js') }}?v=5"></script>
+    <script src="{{ url_for('static', filename='app.js') }}?v=6"></script>
     <script>
         // No inline topbar date logic needed here anymore, it's specific to the dashboard page in the new design.
     </script>

@@ -59,7 +59,7 @@ def get_notifications():
         notifications.append({
             'type': 'danger',
             'title': 'Profit Warning',
-            'message': f"Your business has operated at a net loss over the last 30 days (-${abs(net_profit):.2f})."
+            'message': f"Your business has operated at a net loss over the last 30 days (Amount: -{abs(net_profit):.2f})."
         })
         
     return jsonify(notifications)
