@@ -298,7 +298,7 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-sp
 .icon-teal { background: #F0FDFA; color: #14B8A6; }
 .icon-purple { background: #F5F3FF; color: #8B5CF6; }
 .icon-green { background: #ECFDF5; color: #10B981; }
-.kpi-value { font-size: 1.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1; }
+.kpi-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.2; word-break: break-word; }
 .kpi-trend { font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 0.25rem; }
 .trend-up { color: var(--status-success); }
 .trend-down { color: var(--status-danger); }
