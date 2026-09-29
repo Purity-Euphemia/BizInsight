@@ -132,8 +132,15 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-sp
 ========================================= */
 .table-container {
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: 400px;
     background: var(--bg-white);
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
 }
+.table-container::-webkit-scrollbar { width: 6px; height: 6px; }
+.table-container::-webkit-scrollbar-track { background: transparent; }
+.table-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
 .table {
     width: 100%; border-collapse: collapse; white-space: nowrap;
 }
@@ -141,9 +148,11 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-sp
     padding: 1rem 0; text-align: left; border-bottom: 1px solid var(--border-color);
 }
 .table th {
+    position: sticky; top: 0; z-index: 10;
     background-color: var(--bg-white); color: var(--text-secondary);
     font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
     padding-bottom: 0.5rem;
+    box-shadow: 0 1px 0 var(--border-color); /* To replace the missing border when sticky */
 }
 .table tr:last-child td { border-bottom: none; }
 .table td { font-size: 0.875rem; color: var(--text-primary); }
@@ -155,8 +164,10 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text-primary); letter-sp
     padding: 1rem 0; text-align: left; border-bottom: 1px solid var(--border-color);
 }
 .data-table th {
+    position: sticky; top: 0; z-index: 10;
     background-color: var(--bg-white); color: var(--text-secondary);
     font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+    box-shadow: 0 1px 0 var(--border-color); /* To replace the missing border when sticky */
 }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table td { font-size: 0.875rem; color: var(--text-primary); }
